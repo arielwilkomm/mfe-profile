@@ -1,3 +1,5 @@
 #!/usr/bin/env sh
-yarn format && 
-yarn lint --max-warnings 0
+. "$(dirname -- "$0")/_/husky.sh"
+
+npm test
+npm run lint && npm test
