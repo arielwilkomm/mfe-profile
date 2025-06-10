@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { apiGet, apiPost, apiPut, apiDelete } from '../hooks/api';
 
 export interface AddressRecordDTO {
   street: string;
@@ -9,18 +9,29 @@ export interface AddressRecordDTO {
   addressType: 'RESIDENCIAL' | 'COMMERCIAL';
 }
 
-export async function getAddress(cpf: string, addressId: string) {
-  const res = await fetch(`${API_URL}/v1/profile/${cpf}/address/${addressId}`);
-  if (!res.ok) throw new Error('Erro ao buscar endereço');
-  return res.json();
+export async function getAddress(cpf: string, addressId: string): Promise<AddressRecordDTO> {
+  return apiGet<AddressRecordDTO>(`/v1/profile/${cpf}/address/${addressId}`);
 }
 
-export async function createAddress(cpf: string, data: AddressRecordDTO) {
-  const res = await fetch(`${API_URL}/v1/profile/${cpf}/address`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Erro ao criar endereço');
-  return res.json();
+export async function createAddress(
+  cpf: string,
+  data: AddressRecordDTO
+): Promise<AddressRecordDTO> {
+  return apiPost<AddressRecordDTO>(`/v1/profile/${cpf}/address`, data);
+}
+
+export async function getPostalCode(postalCode: string): Promise<any> {
+  return apiGet<any>(`/v1/postal-code/${postalCode}`);
+}
+
+export async function updateAddress(
+  cpf: string,
+  addressId: string,
+  data: AddressRecordDTO
+): Promise<AddressRecordDTO> {
+  return apiPut<AddressRecordDTO>(`/v1/profile/${cpf}/address/${addressId}`, data);
+}
+
+export async function deleteAddress(cpf: string, addressId: string): Promise<{ message: string }> {
+  return apiDelete<{ message: string }>(`/v1/profile/${cpf}/address/${addressId}`);
 }

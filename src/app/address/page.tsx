@@ -1,9 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createAddress, getAddress, AddressRecordDTO } from './addressService';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { createAddress, getAddress, getPostalCode, AddressRecordDTO } from './addressService';
 
 export default function AddressPage() {
     const [cpf, setCpf] = useState('');
@@ -43,16 +41,13 @@ export default function AddressPage() {
     const handleCepSearch = async () => {
         setLoadingCep(true);
         try {
-            const res = await fetch(`${API_URL}/v1/postal-code/${form.postalCode}`);
-            if (!res.ok) throw new Error('Erro ao buscar CEP');
-            const data = await res.json();
+            const data = await getPostalCode(form.postalCode);
             setForm(f => ({
                 ...f,
                 street: data.logradouro || f.street,
                 city: data.localidade || f.city,
                 state: data.uf || f.state,
                 country: 'Brasil',
-                // mantém o CEP digitado
             }));
         } catch (e: any) {
             setError(e.message);
