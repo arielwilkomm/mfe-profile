@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { createAddress, getAddress, AddressRecordDTO } from './addressService';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function AddressPage() {
     const [cpf, setCpf] = useState('');
     const [addressId, setAddressId] = useState('');
@@ -16,6 +18,7 @@ export default function AddressPage() {
         addressType: 'RESIDENCIAL',
     });
     const [error, setError] = useState('');
+    const [loadingCep, setLoadingCep] = useState(false);
 
     const handleGet = async () => {
         setError('');
@@ -34,6 +37,27 @@ export default function AddressPage() {
             setAddress(data);
         } catch (e: any) {
             setError(e.message);
+        }
+    };
+
+    const handleCepSearch = async () => {
+        setLoadingCep(true);
+        try {
+            const res = await fetch(`${API_URL}/v1/postal-code/${form.postalCode}`);
+            if (!res.ok) throw new Error('Erro ao buscar CEP');
+            const data = await res.json();
+            setForm(f => ({
+                ...f,
+                street: data.logradouro || f.street,
+                city: data.localidade || f.city,
+                state: data.uf || f.state,
+                country: 'Brasil',
+                // mantém o CEP digitado
+            }));
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setLoadingCep(false);
         }
     };
 
@@ -59,6 +83,22 @@ export default function AddressPage() {
             </div>
             <div className="mb-4">
                 <h2 className="font-semibold">Criar novo endereço</h2>
+                <div className="flex mb-2 w-full">
+                    <input
+                        className="border p-2 flex-1"
+                        placeholder="CEP"
+                        value={form.postalCode}
+                        onChange={e => setForm(f => ({ ...f, postalCode: e.target.value }))}
+                    />
+                    <button
+                        className="bg-blue-500 text-white px-4 py-2 ml-2"
+                        type="button"
+                        onClick={handleCepSearch}
+                        disabled={loadingCep || !form.postalCode}
+                    >
+                        {loadingCep ? 'Buscando...' : 'Buscar CEP'}
+                    </button>
+                </div>
                 <input
                     className="border p-2 mb-2 w-full"
                     placeholder="Rua"
@@ -82,12 +122,6 @@ export default function AddressPage() {
                     placeholder="País"
                     value={form.country}
                     onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
-                />
-                <input
-                    className="border p-2 mb-2 w-full"
-                    placeholder="CEP"
-                    value={form.postalCode}
-                    onChange={e => setForm(f => ({ ...f, postalCode: e.target.value }))}
                 />
                 <select
                     className="border p-2 mb-2 w-full"
