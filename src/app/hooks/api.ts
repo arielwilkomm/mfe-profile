@@ -33,3 +33,7 @@ export async function apiDelete<T>(endpoint: string): Promise<T> {
   if (!res.ok) throw new Error('Erro na requisição DELETE');
   return res.json();
 }
+
+export async function getProfiles<T = any[]>(): Promise<T> {
+  return apiGet<T>(`/v1/profile`);
+}

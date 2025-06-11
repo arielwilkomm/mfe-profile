@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { createAddress, getAddress, getPostalCode, AddressRecordDTO } from './addressService';
+import { useEffect, useState } from 'react';
+import { createAddress, getAddress, getAllAddresses, getPostalCode, AddressRecordDTO } from './addressService';
 
 export default function AddressPage() {
     const [cpf, setCpf] = useState('');
@@ -17,6 +17,21 @@ export default function AddressPage() {
     });
     const [error, setError] = useState('');
     const [loadingCep, setLoadingCep] = useState(false);
+    const [addresses, setAddresses] = useState<AddressRecordDTO[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const cpfParam = urlParams.get('cpf') || '';
+        setCpf(cpfParam);
+        if (cpfParam) {
+            setLoading(true);
+            getAllAddresses(cpfParam)
+                .then(data => setAddresses(Array.isArray(data) ? data : []))
+                .catch(e => setError('Erro ao buscar endereços'))
+                .finally(() => setLoading(false));
+        }
+    }, []);
 
     const handleGet = async () => {
         setError('');
@@ -58,24 +73,43 @@ export default function AddressPage() {
 
     return (
         <div className="max-w-xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Endereço</h1>
-            <div className="mb-4">
-                <input
-                    className="border p-2 mr-2"
-                    placeholder="CPF"
-                    value={cpf}
-                    onChange={e => setCpf(e.target.value)}
-                />
-                <input
-                    className="border p-2 mr-2"
-                    placeholder="Address ID"
-                    value={addressId}
-                    onChange={e => setAddressId(e.target.value)}
-                />
-                <button className="bg-blue-500 text-white px-4 py-2" onClick={handleGet}>
-                    Buscar
-                </button>
-            </div>
+            <h1 className="text-2xl font-bold mb-4">Endereços do Usuário</h1>
+            {loading ? (
+                <div>Carregando...</div>
+            ) : error ? (
+                <div className="text-red-500">{error}</div>
+            ) : (
+                <table className="min-w-full border text-sm">
+                    <thead>
+                        <tr>
+                            <th className="border px-2 py-1">Rua</th>
+                            <th className="border px-2 py-1">Cidade</th>
+                            <th className="border px-2 py-1">Estado</th>
+                            <th className="border px-2 py-1">País</th>
+                            <th className="border px-2 py-1">CEP</th>
+                            <th className="border px-2 py-1">Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {addresses.length === 0 ? (
+                            <tr>
+                                <td className="border px-2 py-1 text-center" colSpan={6}>Nenhum endereço encontrado</td>
+                            </tr>
+                        ) : (
+                            addresses.map((addr, idx) => (
+                                <tr key={idx}>
+                                    <td className="border px-2 py-1">{addr.street}</td>
+                                    <td className="border px-2 py-1">{addr.city}</td>
+                                    <td className="border px-2 py-1">{addr.state}</td>
+                                    <td className="border px-2 py-1">{addr.country}</td>
+                                    <td className="border px-2 py-1">{addr.postalCode}</td>
+                                    <td className="border px-2 py-1">{addr.addressType}</td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            )}
             <div className="mb-4">
                 <h2 className="font-semibold">Criar novo endereço</h2>
                 <div className="flex mb-2 w-full">

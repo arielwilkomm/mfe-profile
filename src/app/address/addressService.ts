@@ -35,3 +35,7 @@ export async function updateAddress(
 export async function deleteAddress(cpf: string, addressId: string): Promise<{ message: string }> {
   return apiDelete<{ message: string }>(`/v1/profile/${cpf}/address/${addressId}`);
 }
+
+export async function getAllAddresses(cpf: string): Promise<AddressRecordDTO[]> {
+  return apiGet<AddressRecordDTO[]>(`/v1/profile/${cpf}/address`);
+}
