@@ -73,6 +73,13 @@ export default function AddressPage() {
 
     return (
         <div className="max-w-xl mx-auto p-4">
+            <button
+                className="mb-4 text-blue-600 underline"
+                type="button"
+                onClick={() => window.history.back()}
+            >
+                ← Voltar
+            </button>
             <h1 className="text-2xl font-bold mb-4">Endereços do Usuário</h1>
             {loading ? (
                 <div>Carregando...</div>
