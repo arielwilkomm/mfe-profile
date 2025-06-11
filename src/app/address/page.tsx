@@ -24,6 +24,10 @@ export default function AddressPage() {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const cpfParam = urlParams.get('cpf') || '';
+        if (!cpfParam) {
+            window.location.replace('/');
+            return;
+        }
         setCpf(cpfParam);
         if (cpfParam) {
             setLoading(true);
