@@ -1,123 +1,63 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createAddress, getAddress, getAllAddresses, getPostalCode, AddressRecordDTO, updateAddress, deleteAddress } from './addressService';
+import { useCallback, useEffect, useState } from "react";
+import { useAddressApi } from "../../hooks/useAddressApi";
+import { AddressForm } from "../../components/AddressForm";
+import { AddressFormValues } from "../../schemas/addressSchema";
 
 export default function AddressPage() {
-    const [cpf, setCpf] = useState('');
-    const [addressId, setAddressId] = useState('');
-    const [address, setAddress] = useState<AddressRecordDTO | null>(null);
-    const [form, setForm] = useState<AddressRecordDTO>({
-        street: '',
-        city: '',
-        state: '',
-        country: '',
-        postalCode: '',
-        addressType: 'RESIDENTIAL',
-    });
-    const [error, setError] = useState('');
-    const [loadingCep, setLoadingCep] = useState(false);
-    const [addresses, setAddresses] = useState<AddressRecordDTO[]>([]);
+    const { getAddresses, deleteAddress } = useAddressApi();
+    const [cpf, setCpf] = useState("");
+    const [addresses, setAddresses] = useState<AddressFormValues[]>([]);
+    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+    const [selectedAddress, setSelectedAddress] = useState<{ data: AddressFormValues; idx: number } | null>(null);
+
+    const fetchAddresses = useCallback(async (cpfValue: string) => {
+        setLoading(true);
+        try {
+            const data = await getAddresses(cpfValue);
+            setAddresses(Array.isArray(data) ? data : []);
+        } catch {
+            setError("Erro ao buscar endereços");
+        } finally {
+            setLoading(false);
+        }
+    }, [getAddresses]);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        const cpfParam = urlParams.get('cpf') || '';
+        const cpfParam = urlParams.get("cpf") || "";
         if (!cpfParam) {
-            window.location.replace('/');
+            window.location.replace("/");
             return;
         }
         setCpf(cpfParam);
-        if (cpfParam) {
-            setLoading(true);
-            getAllAddresses(cpfParam)
-                .then(data => setAddresses(Array.isArray(data) ? data : []))
-                .catch(e => setError('Erro ao buscar endereços'))
-                .finally(() => setLoading(false));
-        }
-    }, []);
+        fetchAddresses(cpfParam);
+    }, [fetchAddresses]);
 
-    const fetchAddresses = () => {
-        if (cpf) {
-            setLoading(true);
-            getAllAddresses(cpf)
-                .then(data => setAddresses(Array.isArray(data) ? data : []))
-                .catch(() => setError('Erro ao buscar endereços'))
-                .finally(() => setLoading(false));
-        }
-    };
-
-    const handleGet = async () => {
-        setError('');
-        try {
-            const data = await getAddress(cpf, addressId);
-            setAddress(data);
-        } catch (e: any) {
-            setError(e.message);
-        }
-    };
-
-    const handleCreateOrUpdate = async () => {
-        setError('');
-        try {
-            let data;
-            if (editingAddressId) {
-                data = await updateAddress(cpf, editingAddressId, form);
-            } else {
-                data = await createAddress(cpf, form);
-            }
-            setAddress(data);
-            setForm({
-                street: '',
-                city: '',
-                state: '',
-                country: '',
-                postalCode: '',
-                addressType: 'RESIDENTIAL',
-            });
-            setEditingAddressId(null);
-            fetchAddresses();
-        } catch (e: any) {
-            setError(e.message);
-        }
-    };
-
-    const handleEdit = (addr: any, idx: number) => {
-        setForm(addr);
-        setEditingAddressId((addr as any).id || idx.toString());
-    };
-
-    const handleDelete = async (addr: any, idx: number) => {
-        if (!window.confirm('Tem certeza que deseja excluir este endereço?')) return;
-        setError('');
+    const handleDelete = async (addr: AddressFormValues, idx: number) => {
+        if (!window.confirm("Tem certeza que deseja excluir este endereço?")) return;
+        setError("");
         setLoading(true);
         try {
-            await deleteAddress(cpf, (addr as any).id || idx.toString());
-            fetchAddresses();
-        } catch (e: any) {
-            setError(e.message);
+            await deleteAddress(cpf, idx.toString());
+            fetchAddresses(cpf);
+        } catch (e: unknown) {
+            if (e instanceof Error) setError(e.message);
+            else setError("Erro desconhecido ao excluir endereço");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCepSearch = async () => {
-        setLoadingCep(true);
-        try {
-            const data = await getPostalCode(form.postalCode);
-            setForm((f: AddressRecordDTO) => ({
-                ...f,
-                street: data.logradouro || f.street,
-                city: data.localidade || f.city,
-                state: data.uf || f.state,
-                country: 'Brasil',
-            }));
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setLoadingCep(false);
-        }
+    const handleEdit = (addr: AddressFormValues, idx: number) => {
+        setSelectedAddress({ data: addr, idx });
+    };
+
+    const handleFormSuccess = () => {
+        setSelectedAddress(null);
+        fetchAddresses(cpf);
     };
 
     return (
@@ -162,8 +102,8 @@ export default function AddressPage() {
                                     <td className="border px-2 py-1">{addr.postalCode}</td>
                                     <td className="border px-2 py-1">{addr.addressType}</td>
                                     <td className="border px-2 py-1">
-                                        <button className="text-yellow-600 underline mr-2" type="button" onClick={() => handleEdit(addr, idx)}>Alterar</button>
                                         <button className="text-red-600 underline" type="button" onClick={() => handleDelete(addr, idx)}>Excluir</button>
+                                        <button className="ml-2 text-yellow-600 underline" type="button" onClick={() => handleEdit(addr, idx)}>Alterar</button>
                                     </td>
                                 </tr>
                             ))
@@ -172,80 +112,26 @@ export default function AddressPage() {
                 </table>
             )}
             <div className="mb-4">
-                <h2 className="font-semibold">{editingAddressId ? 'Alterar endereço' : 'Criar novo endereço'}</h2>
-                <div className="flex mb-2 w-full">
-                    <input
-                        className="border p-2 flex-1"
-                        placeholder="CEP"
-                        value={form.postalCode}
-                        onChange={e => setForm((f: AddressRecordDTO) => ({ ...f, postalCode: e.target.value }))}
+                <h2 className="font-semibold">{selectedAddress ? "Editar endereço" : "Criar novo endereço"}</h2>
+                {cpf && (
+                    <AddressForm
+                        cpf={cpf}
+                        onSuccess={handleFormSuccess}
+                        initialValues={selectedAddress?.data}
+                        isEdit={!!selectedAddress}
                     />
+                )}
+                {selectedAddress && (
                     <button
-                        className="bg-blue-500 text-white px-4 py-2 ml-2"
+                        className="mt-2 text-gray-600 underline"
                         type="button"
-                        onClick={handleCepSearch}
-                        disabled={loadingCep || !form.postalCode}
+                        onClick={() => setSelectedAddress(null)}
                     >
-                        {loadingCep ? 'Buscando...' : 'Buscar CEP'}
-                    </button>
-                </div>
-                <input
-                    className="border p-2 mb-2 w-full"
-                    placeholder="Rua"
-                    value={form.street}
-                    onChange={e => setForm((f: AddressRecordDTO) => ({ ...f, street: e.target.value }))}
-                />
-                <input
-                    className="border p-2 mb-2 w-full"
-                    placeholder="Cidade"
-                    value={form.city}
-                    onChange={e => setForm((f: AddressRecordDTO) => ({ ...f, city: e.target.value }))}
-                />
-                <input
-                    className="border p-2 mb-2 w-full"
-                    placeholder="Estado"
-                    value={form.state}
-                    onChange={e => setForm((f: AddressRecordDTO) => ({ ...f, state: e.target.value }))}
-                />
-                <input
-                    className="border p-2 mb-2 w-full"
-                    placeholder="País"
-                    value={form.country}
-                    onChange={e => setForm((f: AddressRecordDTO) => ({ ...f, country: e.target.value }))}
-                />
-                <select
-                    className="border p-2 mb-2 w-full"
-                    value={form.addressType}
-                    onChange={e =>
-                        setForm((f: AddressRecordDTO) => ({
-                            ...f,
-                            addressType: e.target.value as AddressRecordDTO['addressType'],
-                        }))
-                    }
-                >
-                    <option value="RESIDENTIAL">Residencial</option>
-                    <option value="COMMERCIAL">Comercial</option>
-                </select>
-                <button className="bg-green-500 text-white px-4 py-2" onClick={handleCreateOrUpdate}>
-                    {editingAddressId ? 'Salvar alterações' : 'Criar'}
-                </button>
-                {editingAddressId && (
-                    <button
-                        className="bg-gray-400 text-white px-4 py-2 ml-2"
-                        type="button"
-                        onClick={() => { setForm({ street: '', city: '', state: '', country: '', postalCode: '', addressType: 'RESIDENTIAL' }); setEditingAddressId(null); }}
-                    >
-                        Cancelar
+                        Cancelar edição
                     </button>
                 )}
             </div>
             {error && <div className="text-red-500">{error}</div>}
-            {address && (
-                <div className="mt-4 border p-4">
-                    <h3 className="font-bold">Endereço retornado:</h3>
-                    <pre>{JSON.stringify(address, null, 2)}</pre>
-                </div>
-            )}
         </div>
     );
 }
