@@ -37,3 +37,50 @@ export async function apiDelete<T>(endpoint: string): Promise<T> {
 export async function getProfiles<T = any[]>(): Promise<T> {
   return apiGet<T>(`/v1/profile`);
 }
+
+export interface UserRecordDTO {
+  name: string;
+  cpf: string;
+  email: string;
+  phone: string;
+}
+
+export async function createUser(data: UserRecordDTO): Promise<UserRecordDTO> {
+  return apiPost<UserRecordDTO>(`/v1/profile`, data);
+}
+
+export async function updateUser(cpf: string, data: UserRecordDTO): Promise<UserRecordDTO> {
+  return apiPut<UserRecordDTO>(`/v1/profile/${cpf}`, data);
+}
+
+export async function deleteUser(cpf: string): Promise<{ message: string }> {
+  return apiDelete<{ message: string }>(`/v1/profile/${cpf}`);
+}
+
+export interface AddressRecordDTO {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  addressType: 'RESIDENTIAL' | 'COMMERCIAL';
+}
+
+export async function getAddress(cpf: string, addressId: string): Promise<AddressRecordDTO> {
+  return apiGet<AddressRecordDTO>(`/v1/profile/${cpf}/address/${addressId}`);
+}
+
+export async function createAddress(
+  cpf: string,
+  data: AddressRecordDTO
+): Promise<AddressRecordDTO> {
+  return apiPost<AddressRecordDTO>(`/v1/profile/${cpf}/address`, data);
+}
+
+export async function getAllAddresses(cpf: string): Promise<AddressRecordDTO[]> {
+  return apiGet<AddressRecordDTO[]>(`/v1/profile/${cpf}/address`);
+}
+
+export async function getPostalCode(postalCode: string): Promise<any> {
+  return apiGet<any>(`/v1/postal-code/${postalCode}`);
+}

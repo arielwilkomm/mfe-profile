@@ -1,28 +1,22 @@
-import { apiGet, apiPost, apiPut, apiDelete } from '../hooks/api';
+import {
+  apiPut,
+  apiDelete,
+  AddressRecordDTO,
+  getAddress,
+  createAddress,
+  getPostalCode,
+  getAllAddresses,
+} from '../hooks/api';
 
-export interface AddressRecordDTO {
-  street: string;
-  city: string;
-  state: string;
-  country: string;
-  postalCode: string;
-  addressType: 'RESIDENCIAL' | 'COMMERCIAL';
+export interface UserRecordDTO {
+  name: string;
+  cpf: string;
+  email: string;
+  phone: string;
 }
 
-export async function getAddress(cpf: string, addressId: string): Promise<AddressRecordDTO> {
-  return apiGet<AddressRecordDTO>(`/v1/profile/${cpf}/address/${addressId}`);
-}
-
-export async function createAddress(
-  cpf: string,
-  data: AddressRecordDTO
-): Promise<AddressRecordDTO> {
-  return apiPost<AddressRecordDTO>(`/v1/profile/${cpf}/address`, data);
-}
-
-export async function getPostalCode(postalCode: string): Promise<any> {
-  return apiGet<any>(`/v1/postal-code/${postalCode}`);
-}
+// Funções de endereço permanecem aqui
+export { getAddress, createAddress, getPostalCode, getAllAddresses };
 
 export async function updateAddress(
   cpf: string,
@@ -36,6 +30,4 @@ export async function deleteAddress(cpf: string, addressId: string): Promise<{ m
   return apiDelete<{ message: string }>(`/v1/profile/${cpf}/address/${addressId}`);
 }
 
-export async function getAllAddresses(cpf: string): Promise<AddressRecordDTO[]> {
-  return apiGet<AddressRecordDTO[]>(`/v1/profile/${cpf}/address`);
-}
+export type { AddressRecordDTO };
