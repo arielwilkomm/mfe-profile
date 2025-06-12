@@ -36,10 +36,10 @@ export function ProfileForm({ onSuccess, initialValues, isEdit }: ProfileFormPro
 
     return (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <input {...form.register("cpf")}
+                className="border p-2 w-full" placeholder="CPF" disabled={isEdit} />
             <input {...form.register("name")}
                 className="border p-2 w-full" placeholder="Nome" />
-            <input {...form.register("cpf")}
-                className="border p-2 w-full" placeholder="CPF" />
             <input {...form.register("email")}
                 className="border p-2 w-full" placeholder="Email" />
             <input {...form.register("phone")}

@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { useProfileApi } from "../../hooks/useProfileApi";
 import { ProfileForm } from "../../components/ProfileForm";
 import { ProfileFormValues } from "../../schemas/profileSchema";
+import React from "react";
 
 export default function ProfilePage() {
     const { getProfiles, deleteProfile } = useProfileApi();
     const [profiles, setProfiles] = useState<ProfileFormValues[]>([]);
     const [error, setError] = useState("");
     const [selectedProfile, setSelectedProfile] = useState<ProfileFormValues | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [cpfToDelete, setCpfToDelete] = useState<string | null>(null);
 
     useEffect(() => {
         fetchProfiles();
@@ -27,91 +31,145 @@ export default function ProfilePage() {
 
     const handleEdit = (profile: ProfileFormValues) => {
         setSelectedProfile(profile);
+        setShowModal(true);
+    };
+
+    const handleCreate = () => {
+        setSelectedProfile(null);
+        setShowModal(true);
     };
 
     const handleDelete = async (cpf: string) => {
-        if (!window.confirm("Tem certeza que deseja excluir este perfil?")) return;
-        await deleteProfile(cpf);
-        fetchProfiles();
+        setCpfToDelete(cpf);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (cpfToDelete) {
+            await deleteProfile(cpfToDelete);
+            setCpfToDelete(null);
+            setShowDeleteModal(false);
+            fetchProfiles();
+        }
+    };
+
+    const cancelDelete = () => {
+        setCpfToDelete(null);
+        setShowDeleteModal(false);
     };
 
     const handleFormSuccess = () => {
         setSelectedProfile(null);
+        setShowModal(false);
         fetchProfiles();
     };
 
     return (
-        <div className="max-w-xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Perfis de Usuário</h1>
+        <div className="max-w-3xl mx-auto p-2 sm:p-6 flex flex-col items-center">
+            <div className="w-full flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold">Perfis de Usuário</h1>
+                <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+                    onClick={handleCreate}
+                >
+                    Criar usuário
+                </button>
+            </div>
             {error && <div className="text-red-500 mb-2">{error}</div>}
-            <table className="min-w-full border text-sm mb-4">
-                <thead>
-                    <tr>
-                        <th className="border px-2 py-1">Nome</th>
-                        <th className="border px-2 py-1">CPF</th>
-                        <th className="border px-2 py-1">Email</th>
-                        <th className="border px-2 py-1">Telefone</th>
-                        <th className="border px-2 py-1">Endereços</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {profiles.length === 0 ? (
-                        <tr>
-                            <td className="border px-2 py-1 text-center" colSpan={5}>
-                                Nenhum perfil encontrado
-                            </td>
+            <div className="w-full overflow-x-auto mb-4 flex justify-center">
+                <table className="min-w-[600px] w-full bg-white rounded-xl shadow-lg border border-gray-200 text-sm">
+                    <thead>
+                        <tr className="bg-gradient-to-r from-blue-100 to-blue-200">
+                            <th className="border-b px-4 py-3 text-left font-semibold">Nome</th>
+                            <th className="border-b px-4 py-3 text-left font-semibold">CPF</th>
+                            <th className="border-b px-4 py-3 text-left font-semibold">Email</th>
+                            <th className="border-b px-4 py-3 text-left font-semibold">Telefone</th>
+                            <th className="border-b px-4 py-3 text-left font-semibold">Endereços</th>
                         </tr>
-                    ) : (
-                        profiles.map((profile) => (
-                            <tr key={profile.cpf}>
-                                <td className="border px-2 py-1">{profile.name}</td>
-                                <td className="border px-2 py-1">{profile.cpf}</td>
-                                <td className="border px-2 py-1">{profile.email}</td>
-                                <td className="border px-2 py-1">{profile.phone}</td>
-                                <td className="border px-2 py-1">
-                                    <a
-                                        href={`/address?cpf=${profile.cpf}`}
-                                        className="text-blue-600 underline"
-                                    >
-                                        Ir para endereços
-                                    </a>
-                                    <button
-                                        className="ml-2 text-yellow-600 underline"
-                                        type="button"
-                                        onClick={() => handleEdit(profile)}
-                                    >
-                                        Alterar
-                                    </button>
-                                    <button
-                                        className="ml-2 text-red-600 underline"
-                                        type="button"
-                                        onClick={() => handleDelete(profile.cpf)}
-                                    >
-                                        Excluir
-                                    </button>
+                    </thead>
+                    <tbody>
+                        {profiles.length === 0 ? (
+                            <tr>
+                                <td className="px-4 py-2 text-center text-gray-500" colSpan={5}>
+                                    Nenhum perfil encontrado
                                 </td>
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
-            <div className="mb-4">
-                <h2 className="font-semibold mb-2">{selectedProfile ? "Editar perfil" : "Criar novo perfil"}</h2>
-                <ProfileForm
-                    onSuccess={handleFormSuccess}
-                    initialValues={selectedProfile || undefined}
-                    isEdit={!!selectedProfile}
-                />
-                {selectedProfile && (
-                    <button
-                        className="mt-2 text-gray-600 underline"
-                        type="button"
-                        onClick={() => setSelectedProfile(null)}
-                    >
-                        Cancelar edição
-                    </button>
-                )}
+                        ) : (
+                            profiles.map((profile, idx) => (
+                                <tr key={profile.cpf} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                                    <td className="px-4 py-2 border-b">{profile.name}</td>
+                                    <td className="px-4 py-2 border-b">{profile.cpf}</td>
+                                    <td className="px-4 py-2 border-b">{profile.email}</td>
+                                    <td className="px-4 py-2 border-b">{profile.phone}</td>
+                                    <td className="px-4 py-2 border-b">
+                                        <a
+                                            href={`/address?cpf=${profile.cpf}`}
+                                            className="text-blue-600 underline hover:text-blue-800"
+                                        >
+                                            Ir para endereços
+                                        </a>
+                                        <button
+                                            className="ml-2 text-yellow-600 underline hover:text-yellow-800"
+                                            type="button"
+                                            onClick={() => handleEdit(profile)}
+                                        >
+                                            Alterar
+                                        </button>
+                                        <button
+                                            className="ml-2 text-red-600 underline hover:text-red-800"
+                                            type="button"
+                                            onClick={() => handleDelete(profile.cpf)}
+                                        >
+                                            Excluir
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
+            {/* Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
+                        <button
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
+                            onClick={() => setShowModal(false)}
+                        >
+                            ×
+                        </button>
+                        <h2 className="font-semibold mb-2">{selectedProfile ? "Editar perfil" : "Criar novo perfil"}</h2>
+                        <ProfileForm
+                            onSuccess={handleFormSuccess}
+                            initialValues={selectedProfile || undefined}
+                            isEdit={!!selectedProfile}
+                        />
+                    </div>
+                </div>
+            )}
+            {/* Modal de confirmação de exclusão */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative">
+                        <h2 className="font-semibold mb-4">Deseja realmente excluir este usuário?</h2>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                                onClick={cancelDelete}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                                onClick={confirmDelete}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

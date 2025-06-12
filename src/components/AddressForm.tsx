@@ -29,6 +29,15 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
     useEffect(() => {
         if (initialValues) {
             form.reset(initialValues);
+        } else {
+            form.reset({
+                street: '',
+                city: '',
+                state: '',
+                country: '',
+                postalCode: '',
+                addressType: 'RESIDENTIAL',
+            });
         }
     }, [initialValues, form]);
 
@@ -43,34 +52,98 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
         onSuccess?.();
     };
 
+    const [autoFilled, setAutoFilled] = React.useState<{ [key: string]: boolean }>({
+        street: false,
+        city: false,
+        state: false,
+        country: false
+    });
+    const [cepEdited, setCepEdited] = React.useState(false);
+    const [lastCep, setLastCep] = React.useState("");
+    const [cepOnFocus, setCepOnFocus] = React.useState("");
+
+    const handleCepFocus = () => {
+        setCepOnFocus(form.getValues("postalCode"));
+    };
+
     const handleCep = async () => {
         const cep = form.getValues("postalCode");
-        if (cep) {
+        const numericCep = cep.replace(/\D/g, "");
+        if (cep !== lastCep && cep !== cepOnFocus && numericCep.length === 8) {
+            setCepEdited(true);
+            setLastCep(cep);
             const data = await getPostalCode(cep);
             form.setValue("street", data.logradouro || "");
             form.setValue("city", data.localidade || "");
             form.setValue("state", data.uf || "");
-            form.setValue("country", "Brasil");
+            form.setValue("country", data.estado || data.uf ? "Brasil" : "");
+            setAutoFilled({
+                street: !!data.logradouro && data.logradouro.trim() !== "",
+                city: !!data.localidade && data.localidade.trim() !== "",
+                state: !!data.uf && data.uf.trim() !== "",
+                country: !!(data.estado && data.estado.trim() !== "" || data.uf && data.uf.trim() !== "")
+            });
         }
+    };
+
+    // Função para aplicar máscara de CEP (00000-000)
+    const maskCep = (value: string) => {
+        return value
+            .replace(/\D/g, "")
+            .replace(/(\d{5})(\d)/, "$1-$2")
+            .replace(/(-\d{3})\d+?$/, "$1");
+    };
+
+    // Se for criação, só permite editar campos após buscar um CEP válido
+    const isFieldDisabled = (field: string) => {
+        if (!isEdit && !cepEdited) return true;
+        if (isEdit && !cepEdited) return true;
+        return !!autoFilled[field];
     };
 
     return (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-            <div className="flex gap-2">
-                <input {...form.register("postalCode")}
-                    className="border p-2 flex-1" placeholder="CEP" />
-                <button type="button" className="bg-blue-500 text-white px-2" onClick={handleCep}>Buscar CEP</button>
-            </div>
-            <input {...form.register("street")}
-                className="border p-2 w-full" placeholder="Rua" />
-            <input {...form.register("city")}
-                className="border p-2 w-full" placeholder="Cidade" />
-            <input {...form.register("state")}
-                className="border p-2 w-full" placeholder="Estado" />
-            <input {...form.register("country")}
-                className="border p-2 w-full" placeholder="País" />
+            <input
+                {...form.register("postalCode")}
+                className="border p-2 w-full"
+                placeholder="CEP"
+                maxLength={9}
+                onFocus={handleCepFocus}
+                onBlur={handleCep}
+                onChange={e => {
+                    const masked = maskCep(e.target.value);
+                    form.setValue("postalCode", masked);
+                    if (isEdit || !isEdit) setCepEdited(false);
+                }}
+                value={form.watch("postalCode")}
+            />
+            {((isEdit && !cepEdited) || (!isEdit && !cepEdited)) && (
+                <div className="text-blue-600 text-sm mb-2">Altere o CEP para liberar a edição dos outros campos.</div>
+            )}
+            <input
+                {...form.register("street")}
+                className="border p-2 w-full" placeholder="Rua"
+                disabled={isFieldDisabled("street")}
+            />
+            <input
+                {...form.register("city")}
+                className="border p-2 w-full" placeholder="Cidade"
+                disabled={isFieldDisabled("city")}
+            />
+            <input
+                {...form.register("state")}
+                className="border p-2 w-full" placeholder="Estado"
+                disabled={isFieldDisabled("state")}
+            />
+            <input
+                {...form.register("country")}
+                className="border p-2 w-full" placeholder="País"
+                disabled={isFieldDisabled("country")}
+            />
             <select {...form.register("addressType")}
-                className="border p-2 w-full">
+                className="border p-2 w-full"
+                disabled={isFieldDisabled("addressType")}
+            >
                 <option value="RESIDENTIAL">Residencial</option>
                 <option value="COMMERCIAL">Comercial</option>
             </select>
@@ -79,7 +152,7 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
                     {Object.values(form.formState.errors).map(e => e?.message).join(" | ")}
                 </div>
             )}
-            <button type="submit" className="bg-green-500 text-white px-4 py-2">
+            <button type="submit" className="bg-green-500 text-white px-4 py-2" disabled={(!isEdit && !cepEdited) || (isEdit && !cepEdited)}>
                 {isEdit ? "Atualizar" : "Salvar"}
             </button>
         </form>
