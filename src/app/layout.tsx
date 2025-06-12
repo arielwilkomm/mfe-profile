@@ -1,15 +1,13 @@
 import { ReactNode } from "react";
-import { Metadata } from "next";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "MFE Profile",
-  description: "Micro front-end de profile",
-};
+interface RootLayoutProps {
+  children: ReactNode;
+}
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="pt_BR">
+    <html lang="pt-BR">
       <head />
       <body className="bg-gray-100 min-h-screen text-black">
         {children}
