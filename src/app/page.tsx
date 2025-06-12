@@ -1,5 +1,10 @@
+import { Container } from "@/components/Container";
 import ProfilePage from './profile/page';
 
 export default function Home() {
-  return <ProfilePage />;
+  return (
+    <Container>
+      <ProfilePage />
+    </Container>
+  );
 }

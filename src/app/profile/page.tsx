@@ -1,5 +1,6 @@
 "use client";
 
+import { Container } from "@/components/Container";
 import { useEffect, useState } from "react";
 import { useProfileApi } from "../../hooks/useProfileApi";
 import { ProfileForm } from "../../components/ProfileForm";
@@ -65,111 +66,120 @@ export default function ProfilePage() {
     };
 
     return (
-        <div className="max-w-3xl mx-auto p-2 sm:p-6 flex flex-col items-center">
-            <div className="w-full flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Perfis de Usuário</h1>
-                <button
-                    className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
-                    onClick={handleCreate}
-                >
-                    Criar usuário
-                </button>
-            </div>
-            {error && <div className="text-red-500 mb-2">{error}</div>}
-            <div className="w-full overflow-x-auto mb-4 flex justify-center">
-                <table className="min-w-[600px] w-full bg-white rounded-xl shadow-lg border border-gray-200 text-sm">
-                    <thead>
-                        <tr className="bg-gradient-to-r from-blue-100 to-blue-200">
-                            <th className="border-b px-4 py-3 text-left font-semibold">Nome</th>
-                            <th className="border-b px-4 py-3 text-left font-semibold">CPF</th>
-                            <th className="border-b px-4 py-3 text-left font-semibold">Email</th>
-                            <th className="border-b px-4 py-3 text-left font-semibold">Telefone</th>
-                            <th className="border-b px-4 py-3 text-left font-semibold">Endereços</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {profiles.length === 0 ? (
-                            <tr>
-                                <td className="px-4 py-2 text-center text-gray-500" colSpan={5}>
-                                    Nenhum perfil encontrado
-                                </td>
+        <Container>
+            <div className="max-w-3xl mx-auto p-2 sm:p-6 flex flex-col items-center">
+                <div className="w-full flex items-center mb-4">
+                    <div className="flex-1" />
+                    <h1 className="text-2xl font-bold text-center flex-1">Perfis de Usuário</h1>
+                    <div className="flex-1 flex justify-end">
+                        <button
+                            className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+                            style={{ minWidth: '140px' }}
+                            onClick={handleCreate}
+                        >
+                            Criar usuário
+                        </button>
+                    </div>
+                </div>
+                {error && <div className="text-red-500 mb-2">{error}</div>}
+                <div className="w-full overflow-x-auto mb-4 flex justify-center">
+                    <table className="min-w-[700px] w-full bg-white rounded-xl shadow-lg border border-gray-200 text-sm">
+                        <thead>
+                            <tr className="bg-gradient-to-r from-blue-100 to-blue-200">
+                                <th className="border-b px-4 py-3 text-left font-semibold">Nome</th>
+                                <th className="border-b px-4 py-3 text-left font-semibold">CPF</th>
+                                <th className="border-b px-4 py-3 text-left font-semibold">Email</th>
+                                <th className="border-b px-4 py-3 text-left font-semibold">Telefone</th>
+                                <th className="border-b px-4 py-3 text-left font-semibold">Endereços</th>
+                                <th className="border-b px-4 py-3 text-left font-semibold">Ações</th>
                             </tr>
-                        ) : (
-                            profiles.map((profile, idx) => (
-                                <tr key={profile.cpf} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                                    <td className="px-4 py-2 border-b">{profile.name}</td>
-                                    <td className="px-4 py-2 border-b">{profile.cpf}</td>
-                                    <td className="px-4 py-2 border-b">{profile.email}</td>
-                                    <td className="px-4 py-2 border-b">{profile.phone}</td>
-                                    <td className="px-4 py-2 border-b">
-                                        <a
-                                            href={`/address?cpf=${profile.cpf}`}
-                                            className="text-blue-600 underline hover:text-blue-800"
-                                        >
-                                            Ir para endereços
-                                        </a>
-                                        <button
-                                            className="ml-2 text-yellow-600 underline hover:text-yellow-800"
-                                            type="button"
-                                            onClick={() => handleEdit(profile)}
-                                        >
-                                            Alterar
-                                        </button>
-                                        <button
-                                            className="ml-2 text-red-600 underline hover:text-red-800"
-                                            type="button"
-                                            onClick={() => handleDelete(profile.cpf)}
-                                        >
-                                            Excluir
-                                        </button>
+                        </thead>
+                        <tbody>
+                            {profiles.length === 0 ? (
+                                <tr>
+                                    <td className="px-4 py-2 text-center text-gray-500" colSpan={6}>
+                                        Nenhum perfil encontrado
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
-                        <button
-                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
-                            onClick={() => setShowModal(false)}
-                        >
-                            ×
-                        </button>
-                        <h2 className="font-semibold mb-2">{selectedProfile ? "Editar perfil" : "Criar novo perfil"}</h2>
-                        <ProfileForm
-                            onSuccess={handleFormSuccess}
-                            initialValues={selectedProfile || undefined}
-                            isEdit={!!selectedProfile}
-                        />
-                    </div>
+                            ) : (
+                                profiles.map((profile, idx) => (
+                                    <tr key={profile.cpf} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                                        <td className="px-4 py-2 border-b align-middle">{profile.name}</td>
+                                        <td className="px-4 py-2 border-b align-middle">{profile.cpf}</td>
+                                        <td className="px-4 py-2 border-b align-middle">{profile.email}</td>
+                                        <td className="px-4 py-2 border-b align-middle">{profile.phone}</td>
+                                        <td className="px-4 py-2 border-b align-middle">
+                                            <a
+                                                href={`/address?cpf=${profile.cpf}`}
+                                                className="text-blue-600 underline hover:text-blue-800"
+                                            >
+                                                Ir para endereços
+                                            </a>
+                                        </td>
+                                        <td className="px-4 py-2 border-b align-middle whitespace-nowrap">
+                                            <button
+                                                className="text-yellow-600 underline hover:text-yellow-800 mr-2"
+                                                type="button"
+                                                onClick={() => handleEdit(profile)}
+                                            >
+                                                Alterar
+                                            </button>
+                                            <button
+                                                className="text-red-600 underline hover:text-red-800"
+                                                type="button"
+                                                onClick={() => handleDelete(profile.cpf)}
+                                            >
+                                                Excluir
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-            )}
-            {/* Modal de confirmação de exclusão */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative">
-                        <h2 className="font-semibold mb-4">Deseja realmente excluir este usuário?</h2>
-                        <div className="flex justify-end gap-2">
+                {/* Modal */}
+                {showModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
                             <button
-                                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-                                onClick={cancelDelete}
+                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
+                                onClick={() => setShowModal(false)}
                             >
-                                Cancelar
+                                ×
                             </button>
-                            <button
-                                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                                onClick={confirmDelete}
-                            >
-                                OK
-                            </button>
+                            <h2 className="font-semibold mb-2">{selectedProfile ? "Editar perfil" : "Criar novo perfil"}</h2>
+                            <ProfileForm
+                                onSuccess={handleFormSuccess}
+                                initialValues={selectedProfile || undefined}
+                                isEdit={!!selectedProfile}
+                            />
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+                {/* Modal de confirmação de exclusão */}
+                {showDeleteModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative">
+                            <h2 className="font-semibold mb-4">Deseja realmente excluir este usuário?</h2>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                                    onClick={cancelDelete}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                                    onClick={confirmDelete}
+                                >
+                                    OK
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </Container>
     );
 }

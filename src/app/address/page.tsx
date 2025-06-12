@@ -5,6 +5,7 @@ import { useAddressApi } from "../../hooks/useAddressApi";
 import { AddressForm } from "../../components/AddressForm";
 import { AddressFormValues } from "../../schemas/addressSchema";
 import React from "react";
+import { Container } from "@/components/Container";
 
 export default function AddressPage() {
     const { getAddresses, deleteAddress } = useAddressApi();
@@ -76,111 +77,116 @@ export default function AddressPage() {
     };
 
     return (
-        <div className="max-w-3xl mx-auto p-2 sm:p-6 flex flex-col items-center">
-            <div className="w-full flex justify-between items-center mb-4">
-                <button
-                    className="text-blue-600 underline self-start"
-                    type="button"
-                    onClick={() => window.history.back()}
-                >
-                    ← Voltar
-                </button>
-                <button
-                    className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
-                    onClick={handleCreate}
-                >
-                    Criar endereço
-                </button>
-            </div>
-            <h1 className="text-2xl font-bold mb-4">Endereços do Usuário</h1>
-            {loading ? (
-                <div>Carregando...</div>
-            ) : error ? (
-                <div className="text-red-500">{error}</div>
-            ) : (
-                <div className="w-full overflow-x-auto flex justify-center">
-                    <table className="min-w-[600px] w-full bg-white rounded-xl shadow-lg border border-gray-200 text-sm">
-                        <thead>
-                            <tr className="bg-gradient-to-r from-blue-100 to-blue-200">
-                                <th className="border-b px-4 py-3 text-left font-semibold">Rua</th>
-                                <th className="border-b px-4 py-3 text-left font-semibold">Cidade</th>
-                                <th className="border-b px-4 py-3 text-left font-semibold">Estado</th>
-                                <th className="border-b px-4 py-3 text-left font-semibold">País</th>
-                                <th className="border-b px-4 py-3 text-left font-semibold">CEP</th>
-                                <th className="border-b px-4 py-3 text-left font-semibold">Tipo</th>
-                                <th className="border-b px-4 py-3 text-left font-semibold">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {addresses.length === 0 ? (
-                                <tr>
-                                    <td className="px-4 py-2 text-center text-gray-500" colSpan={7}>Nenhum endereço encontrado</td>
-                                </tr>
-                            ) : (
-                                addresses.map((addr, idx) => (
-                                    <tr key={idx} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                                        <td className="px-4 py-2 border-b">{addr.street}</td>
-                                        <td className="px-4 py-2 border-b">{addr.city}</td>
-                                        <td className="px-4 py-2 border-b">{addr.state}</td>
-                                        <td className="px-4 py-2 border-b">{addr.country}</td>
-                                        <td className="px-4 py-2 border-b">{addr.postalCode}</td>
-                                        <td className="px-4 py-2 border-b">{addr.addressType}</td>
-                                        <td className="px-4 py-2 border-b">
-                                            <button className="text-yellow-600 underline hover:text-yellow-800" type="button" onClick={() => handleEdit(addr, idx)}>Alterar</button>
-                                            <button className="ml-2 text-red-600 underline hover:text-red-800" type="button" onClick={() => handleDelete(addr, idx)}>Excluir</button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
+        <Container>
+            <div className="max-w-3xl mx-auto p-2 sm:p-6 flex flex-col items-center">
+                <div className="w-full flex items-center mb-4">
+                    <div className="flex-1 flex items-center">
                         <button
-                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
-                            onClick={() => setShowModal(false)}
+                            className="text-blue-600 underline"
+                            type="button"
+                            onClick={() => window.history.back()}
                         >
-                            ×
+                            ← Voltar
                         </button>
-                        <h2 className="font-semibold mb-2">{selectedAddress ? "Editar endereço" : "Criar novo endereço"}</h2>
-                        {cpf && (
-                            <AddressForm
-                                cpf={cpf}
-                                onSuccess={handleFormSuccess}
-                                initialValues={selectedAddress?.data}
-                                isEdit={!!selectedAddress}
-                            />
-                        )}
+                    </div>
+                    <h1 className="text-2xl font-bold text-center flex-1">Endereços do Usuário</h1>
+                    <div className="flex-1 flex justify-end">
+                        <button
+                            className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+                            onClick={handleCreate}
+                        >
+                            Criar endereço
+                        </button>
                     </div>
                 </div>
-            )}
-            {/* Modal de confirmação de exclusão */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative">
-                        <h2 className="font-semibold mb-4">Deseja realmente excluir este endereço?</h2>
-                        <div className="flex justify-end gap-2">
+                {loading ? (
+                    <div>Carregando...</div>
+                ) : error ? (
+                    <div className="text-red-500">{error}</div>
+                ) : (
+                    <div className="w-full overflow-x-auto flex justify-center">
+                        <table className="min-w-[700px] w-full bg-white rounded-xl shadow-lg border border-gray-200 text-sm">
+                            <thead>
+                                <tr className="bg-gradient-to-r from-blue-100 to-blue-200">
+                                    <th className="border-b px-4 py-3 text-left font-semibold">Rua</th>
+                                    <th className="border-b px-4 py-3 text-left font-semibold">Cidade</th>
+                                    <th className="border-b px-4 py-3 text-left font-semibold">Estado</th>
+                                    <th className="border-b px-4 py-3 text-left font-semibold">País</th>
+                                    <th className="border-b px-4 py-3 text-left font-semibold">CEP</th>
+                                    <th className="border-b px-4 py-3 text-left font-semibold">Tipo</th>
+                                    <th className="border-b px-4 py-3 text-left font-semibold">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {addresses.length === 0 ? (
+                                    <tr>
+                                        <td className="px-4 py-2 text-center text-gray-500" colSpan={7}>Nenhum endereço encontrado</td>
+                                    </tr>
+                                ) : (
+                                    addresses.map((addr, idx) => (
+                                        <tr key={idx} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                                            <td className="px-4 py-2 border-b align-middle">{addr.street}</td>
+                                            <td className="px-4 py-2 border-b align-middle">{addr.city}</td>
+                                            <td className="px-4 py-2 border-b align-middle">{addr.state}</td>
+                                            <td className="px-4 py-2 border-b align-middle">{addr.country}</td>
+                                            <td className="px-4 py-2 border-b align-middle">{addr.postalCode}</td>
+                                            <td className="px-4 py-2 border-b align-middle">{addr.addressType}</td>
+                                            <td className="px-4 py-2 border-b align-middle whitespace-nowrap">
+                                                <button className="text-yellow-600 underline hover:text-yellow-800 mr-2" type="button" onClick={() => handleEdit(addr, idx)}>Alterar</button>
+                                                <button className="text-red-600 underline hover:text-red-800" type="button" onClick={() => handleDelete(addr, idx)}>Excluir</button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+                {/* Modal */}
+                {showModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
                             <button
-                                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-                                onClick={cancelDelete}
+                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
+                                onClick={() => setShowModal(false)}
                             >
-                                Cancelar
+                                ×
                             </button>
-                            <button
-                                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                                onClick={confirmDelete}
-                            >
-                                OK
-                            </button>
+                            <h2 className="font-semibold mb-2">{selectedAddress ? "Editar endereço" : "Criar novo endereço"}</h2>
+                            {cpf && (
+                                <AddressForm
+                                    cpf={cpf}
+                                    onSuccess={handleFormSuccess}
+                                    initialValues={selectedAddress?.data}
+                                    isEdit={!!selectedAddress}
+                                />
+                            )}
                         </div>
                     </div>
-                </div>
-            )}
-            {error && <div className="text-red-500">{error}</div>}
-        </div>
+                )}
+                {/* Modal de confirmação de exclusão */}
+                {showDeleteModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative">
+                            <h2 className="font-semibold mb-4">Deseja realmente excluir este endereço?</h2>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                                    onClick={cancelDelete}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                                    onClick={confirmDelete}
+                                >
+                                    OK
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </Container>
     );
 }
