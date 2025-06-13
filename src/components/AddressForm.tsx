@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema, AddressFormValues } from "../schemas/addressSchema";
 import { useAddressApi } from "../hooks/useAddressApi";
 import React, { useEffect } from "react";
+import styled from "styled-components";
 
 interface AddressFormProps {
     cpf: string;
@@ -10,6 +11,47 @@ interface AddressFormProps {
     initialValues?: AddressFormValues;
     isEdit?: boolean;
 }
+
+const Input = styled.input`
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 1rem;
+`;
+const Select = styled.select`
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 1rem;
+`;
+const ErrorMsg = styled.div`
+  color: #dc2626;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+`;
+const InfoMsg = styled.div`
+  color: #2563eb;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+`;
+const Button = styled.button`
+  background: #16a34a;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+  &:hover {
+    background: #15803d;
+  }
+`;
 
 export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFormProps) {
     const { createAddress, updateAddress, getPostalCode } = useAddressApi();
@@ -102,10 +144,9 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
     };
 
     return (
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-            <input
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Input
                 {...form.register("postalCode")}
-                className="border p-2 w-full"
                 placeholder="CEP"
                 maxLength={9}
                 onFocus={handleCepFocus}
@@ -118,43 +159,42 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
                 value={form.watch("postalCode")}
             />
             {((isEdit && !cepEdited) || (!isEdit && !cepEdited)) && (
-                <div className="text-blue-600 text-sm mb-2">Altere o CEP para liberar a edição dos outros campos.</div>
+                <InfoMsg>Altere o CEP para liberar a edição dos outros campos.</InfoMsg>
             )}
-            <input
+            <Input
                 {...form.register("street")}
-                className="border p-2 w-full" placeholder="Rua"
+                placeholder="Rua"
                 disabled={isFieldDisabled("street")}
             />
-            <input
+            <Input
                 {...form.register("city")}
-                className="border p-2 w-full" placeholder="Cidade"
+                placeholder="Cidade"
                 disabled={isFieldDisabled("city")}
             />
-            <input
+            <Input
                 {...form.register("state")}
-                className="border p-2 w-full" placeholder="Estado"
+                placeholder="Estado"
                 disabled={isFieldDisabled("state")}
             />
-            <input
+            <Input
                 {...form.register("country")}
-                className="border p-2 w-full" placeholder="País"
+                placeholder="País"
                 disabled={isFieldDisabled("country")}
             />
-            <select {...form.register("addressType")}
-                className="border p-2 w-full"
+            <Select {...form.register("addressType")}
                 disabled={isFieldDisabled("addressType")}
             >
                 <option value="RESIDENTIAL">Residencial</option>
                 <option value="COMMERCIAL">Comercial</option>
-            </select>
+            </Select>
             {form.formState.errors && (
-                <div className="text-red-500 text-sm">
+                <ErrorMsg>
                     {Object.values(form.formState.errors).map(e => e?.message).join(" | ")}
-                </div>
+                </ErrorMsg>
             )}
-            <button type="submit" className="bg-green-500 text-white px-4 py-2" disabled={(!isEdit && !cepEdited) || (isEdit && !cepEdited)}>
+            <Button type="submit" disabled={(!isEdit && !cepEdited) || (isEdit && !cepEdited)}>
                 {isEdit ? "Atualizar" : "Salvar"}
-            </button>
+            </Button>
         </form>
     );
 }

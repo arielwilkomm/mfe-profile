@@ -6,6 +6,87 @@ import { AddressForm } from "../../components/AddressForm";
 import { AddressFormValues } from "../../schemas/addressSchema";
 import React from "react";
 import { Container } from "@/components/Container";
+import styled from "styled-components";
+
+const Header = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+`;
+const Title = styled.h1`
+  flex: 1;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+`;
+const Button = styled.button<{ color?: string }>`
+  min-width: 140px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  background: ${({ color }) => color || '#16a34a'};
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover {
+    background: ${({ color }) => color === '#16a34a' ? '#15803d' : color === '#d97706' ? '#b45309' : color === '#dc2626' ? '#b91c1c' : color};
+  }
+`;
+const Table = styled.table`
+  min-width: 700px;
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  border: 1px solid #e5e7eb;
+  font-size: 0.95rem;
+  overflow: hidden;
+`;
+const Thead = styled.thead`
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
+`;
+const Th = styled.th`
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+`;
+const Td = styled.td`
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+`;
+const ModalBg = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+const Modal = styled.div`
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+  padding: 32px 24px 24px 24px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+`;
+const CloseButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+`;
 
 export default function AddressPage() {
     const { getAddresses, deleteAddress } = useAddressApi();
@@ -78,93 +159,85 @@ export default function AddressPage() {
 
     return (
         <Container>
-            <div className="max-w-5xl mx-auto p-4">
-                <div className="flex justify-between items-center mb-6">
-                    <button className="text-blue-600 underline hover:text-blue-800" onClick={() => window.history.back()}>
-                        ← Voltar
-                    </button>
-                    <h1 className="text-2xl font-bold text-center flex-1">Endereços do Usuário</h1>
-                    <button
-                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                        onClick={handleCreate}
-                    >
-                        Criar endereço
-                    </button>
+            <Header>
+                <Button color="#2563eb" style={{ background: 'none', color: '#2563eb', textDecoration: 'underline', boxShadow: 'none', padding: 0 }} onClick={() => window.history.back()}>
+                    ← Voltar
+                </Button>
+                <Title>Endereços do Usuário</Title>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button onClick={handleCreate}>Criar endereço</Button>
                 </div>
-
-                {loading ? (
-                    <div>Carregando...</div>
-                ) : error ? (
-                    <div className="text-red-500">{error}</div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full table-auto border border-gray-300 rounded text-[15px]">
-                            <thead className="bg-gray-100 text-gray-700 font-medium">
+            </Header>
+            {loading ? (
+                <div>Carregando...</div>
+            ) : error ? (
+                <div style={{ color: '#dc2626' }}>{error}</div>
+            ) : (
+                <div style={{ width: '100%', overflowX: 'auto', marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+                    <Table>
+                        <Thead>
+                            <tr>
+                                <Th>Rua</Th>
+                                <Th>Cidade</Th>
+                                <Th>Estado</Th>
+                                <Th>País</Th>
+                                <Th>CEP</Th>
+                                <Th>Tipo</Th>
+                                <Th>Ações</Th>
+                            </tr>
+                        </Thead>
+                        <tbody>
+                            {addresses.length === 0 ? (
                                 <tr>
-                                    <th className="px-4 py-2 text-left">Rua</th>
-                                    <th className="px-4 py-2 text-left">Cidade</th>
-                                    <th className="px-4 py-2 text-left">Estado</th>
-                                    <th className="px-4 py-2 text-left">País</th>
-                                    <th className="px-4 py-2 text-left">CEP</th>
-                                    <th className="px-4 py-2 text-left">Tipo</th>
-                                    <th className="px-4 py-2 text-left">Ações</th>
+                                    <Td colSpan={7} style={{ textAlign: 'center', color: '#6b7280' }}>Nenhum endereço encontrado</Td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {addresses.length === 0 ? (
-                                    <tr>
-                                        <td className="px-4 py-2 text-center text-gray-500" colSpan={7}>Nenhum endereço encontrado</td>
+                            ) : (
+                                addresses.map((addr, idx) => (
+                                    <tr key={idx} style={{ background: idx % 2 === 0 ? '#f9fafb' : '#fff' }}>
+                                        <Td>{addr.street}</Td>
+                                        <Td>{addr.city}</Td>
+                                        <Td>{addr.state}</Td>
+                                        <Td>{addr.country}</Td>
+                                        <Td>{addr.postalCode}</Td>
+                                        <Td>{addr.addressType}</Td>
+                                        <Td style={{ whiteSpace: 'nowrap' }}>
+                                            <Button color="#d97706" style={{ marginRight: 8, background: 'none', color: '#d97706', textDecoration: 'underline', boxShadow: 'none', padding: 0 }} onClick={() => handleEdit(addr, idx)}>Alterar</Button>
+                                            <Button color="#dc2626" style={{ background: 'none', color: '#dc2626', textDecoration: 'underline', boxShadow: 'none', padding: 0 }} onClick={() => handleDelete(addr, idx)}>Excluir</Button>
+                                        </Td>
                                     </tr>
-                                ) : (
-                                    addresses.map((addr, idx) => (
-                                        <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                                            <td className="px-4 py-2 border-t">{addr.street}</td>
-                                            <td className="px-4 py-2 border-t">{addr.city}</td>
-                                            <td className="px-4 py-2 border-t">{addr.state}</td>
-                                            <td className="px-4 py-2 border-t">{addr.country}</td>
-                                            <td className="px-4 py-2 border-t">{addr.postalCode}</td>
-                                            <td className="px-4 py-2 border-t">{addr.addressType}</td>
-                                            <td className="px-4 py-2 border-t whitespace-nowrap">
-                                                <button className="text-yellow-600 hover:text-yellow-800 mr-4" onClick={() => handleEdit(addr, idx)}>Alterar</button>
-                                                <button className="text-red-600 hover:text-red-800" onClick={() => handleDelete(addr, idx)}>Excluir</button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-
-                {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                        <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl relative">
-                            <button className="absolute top-2 right-3 text-xl text-gray-500 hover:text-gray-800" onClick={() => setShowModal(false)}>×</button>
-                            <h2 className="text-lg font-semibold mb-4">{selectedAddress ? 'Editar endereço' : 'Criar endereço'}</h2>
-                            {cpf && (
-                                <AddressForm
-                                    cpf={cpf}
-                                    onSuccess={handleFormSuccess}
-                                    initialValues={selectedAddress?.data}
-                                    isEdit={!!selectedAddress}
-                                />
+                                ))
                             )}
+                        </tbody>
+                    </Table>
+                </div>
+            )}
+            {showModal && (
+                <ModalBg>
+                    <Modal style={{ maxWidth: 480 }}>
+                        <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
+                        <h2 style={{ fontWeight: 600, marginBottom: 8 }}>{selectedAddress ? 'Editar endereço' : 'Criar endereço'}</h2>
+                        {cpf && (
+                            <AddressForm
+                                cpf={cpf}
+                                onSuccess={handleFormSuccess}
+                                initialValues={selectedAddress?.data}
+                                isEdit={!!selectedAddress}
+                            />
+                        )}
+                    </Modal>
+                </ModalBg>
+            )}
+            {showDeleteModal && (
+                <ModalBg>
+                    <Modal style={{ maxWidth: 400 }}>
+                        <h2 style={{ fontWeight: 600, marginBottom: 16 }}>Deseja realmente excluir este endereço?</h2>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                            <Button color="#6b7280" style={{ background: '#e5e7eb', color: '#111827' }} onClick={cancelDelete}>Cancelar</Button>
+                            <Button color="#dc2626" onClick={confirmDelete}>OK</Button>
                         </div>
-                    </div>
-                )}
-
-                {showDeleteModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                        <div className="bg-white p-6 rounded-lg w-full max-w-sm shadow-xl">
-                            <h2 className="text-lg font-semibold mb-4">Deseja realmente excluir este endereço?</h2>
-                            <div className="flex justify-end gap-2">
-                                <button className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400" onClick={cancelDelete}>Cancelar</button>
-                                <button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700" onClick={confirmDelete}>OK</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+                    </Modal>
+                </ModalBg>
+            )}
         </Container>
     );
 }
