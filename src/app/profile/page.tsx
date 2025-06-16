@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { ProfileForm } from "../../components/ProfileForm";
 import * as S from "./styles";
 import { useProfilePage } from "./useProfilePage";
@@ -20,6 +20,8 @@ export default function ProfilePage() {
         cancelDelete,
         handleFormSuccess,
     } = useProfilePage();
+
+    const [showAddressFields, setShowAddressFields] = useState(false);
 
     return (
         <S.containerTableProfile>
@@ -89,6 +91,8 @@ export default function ProfilePage() {
                                     : undefined
                             }
                             isEdit={!!selectedProfile}
+                            showAddressFields={showAddressFields}
+                            onToggleAddressFields={() => setShowAddressFields(v => !v)}
                         />
                     </S.ModalProfile>
                 </S.ModalBgProfile>

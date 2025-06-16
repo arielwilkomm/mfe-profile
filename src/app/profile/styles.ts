@@ -282,7 +282,7 @@ export const FormContainer = styled.div`
 
 export const AddressFormWrapper = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
   @media (max-width: 900px) {

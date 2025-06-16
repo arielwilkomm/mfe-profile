@@ -29,3 +29,13 @@ export const Button = styled.button`
     background: #15803d;
   }
 `;
+
+export const AddressFormWrapper = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 16px;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
