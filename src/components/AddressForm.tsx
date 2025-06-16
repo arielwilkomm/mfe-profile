@@ -1,9 +1,9 @@
-import { useForm } from "react-hook-form";
+import React, { useEffect } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema, AddressFormValues } from "../schemas/addressSchema";
 import { useAddressApi } from "../hooks/useAddressApi";
-import React, { useEffect } from "react";
-import styled from "styled-components";
+import * as S from "./AddressForm/styles";
 
 interface AddressFormProps {
     cpf: string;
@@ -12,119 +12,106 @@ interface AddressFormProps {
     isEdit?: boolean;
 }
 
-const Input = styled.input`
-  border: 1px solid #d1d5db;
-  padding: 8px;
-  width: 100%;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  font-size: 1rem;
-`;
-const Select = styled.select`
-  border: 1px solid #d1d5db;
-  padding: 8px;
-  width: 100%;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  font-size: 1rem;
-`;
-const ErrorMsg = styled.div`
-  color: #dc2626;
-  font-size: 0.95rem;
-  margin-bottom: 8px;
-`;
-const InfoMsg = styled.div`
-  color: #2563eb;
-  font-size: 0.95rem;
-  margin-bottom: 8px;
-`;
-const Button = styled.button`
-  background: #16a34a;
-  color: #fff;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 8px;
-  &:hover {
-    background: #15803d;
-  }
-`;
-
 export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFormProps) {
     const { createAddress, updateAddress, getPostalCode } = useAddressApi();
-    const form = useForm<AddressFormValues>({
-        resolver: zodResolver(addressSchema),
-        defaultValues: initialValues || {
-            street: '',
-            city: '',
-            state: '',
-            country: '',
-            postalCode: '',
-            addressType: 'RESIDENTIAL',
+    const form = useForm<{ addresses: AddressFormValues[] }>({
+        resolver: async (values, context, options) => {
+            // Validação de todos os endereços
+            const errors: any = { addresses: [] };
+            let valid = true;
+            for (let i = 0; i < values.addresses.length; i++) {
+                const result = addressSchema.safeParse(values.addresses[i]);
+                if (!result.success) {
+                    errors.addresses[i] = result.error.flatten().fieldErrors;
+                    valid = false;
+                } else {
+                    errors.addresses[i] = {};
+                }
+            }
+            return {
+                values: valid ? values : {},
+                errors: valid ? {} : errors,
+            };
         },
-    });
-
-    // Atualiza os valores do formulário ao editar
-    useEffect(() => {
-        if (initialValues) {
-            form.reset(initialValues);
-        } else {
-            form.reset({
+        defaultValues: {
+            addresses: [initialValues || {
                 street: '',
                 city: '',
                 state: '',
                 country: '',
                 postalCode: '',
                 addressType: 'RESIDENTIAL',
+            }],
+        },
+    });
+    const { fields, append } = useFieldArray({
+        control: form.control,
+        name: "addresses",
+    });
+
+    // Atualiza os valores do formulário ao editar
+    useEffect(() => {
+        if (initialValues) {
+            form.reset({
+                addresses: [initialValues]
+            });
+        } else {
+            form.reset({
+                addresses: [{
+                    street: '',
+                    city: '',
+                    state: '',
+                    country: '',
+                    postalCode: '',
+                    addressType: 'RESIDENTIAL',
+                }],
             });
         }
     }, [initialValues, form]);
 
-    const onSubmit = async (data: AddressFormValues) => {
-        if (isEdit && initialValues) {
-            // O index do endereço será passado como string no onSubmit do AddressPage
-            await updateAddress(cpf, initialValues.postalCode, data);
-        } else {
-            await createAddress(cpf, data);
+    const onSubmit = async (data: { addresses: AddressFormValues[] }) => {
+        for (const addr of data.addresses) {
+            if (isEdit && initialValues) {
+                // O index do endereço será passado como string no onSubmit do AddressPage
+                await updateAddress(cpf, initialValues.postalCode, addr);
+            } else {
+                await createAddress(cpf, addr);
+            }
         }
         form.reset();
         onSuccess?.();
     };
 
-    const [autoFilled, setAutoFilled] = React.useState<{ [key: string]: boolean }>({
-        street: false,
-        city: false,
-        state: false,
-        country: false
-    });
-    const [cepEdited, setCepEdited] = React.useState(false);
-    const [lastCep, setLastCep] = React.useState("");
-    const [cepOnFocus, setCepOnFocus] = React.useState("");
+    // Estados para múltiplos endereços
+    const [autoFilled, setAutoFilled] = React.useState<{ [idx: number]: { [key: string]: boolean } }>({});
+    const [cepEdited, setCepEdited] = React.useState<{ [idx: number]: boolean }>({});
+    const [lastCep, setLastCep] = React.useState<{ [idx: number]: string }>({});
+    const [cepOnFocus, setCepOnFocus] = React.useState<{ [idx: number]: string }>({});
 
-    const handleCepFocus = () => {
-        setCepOnFocus(form.getValues("postalCode"));
+    const handleCepFocus = (idx: number) => {
+        setCepOnFocus((prev) => ({ ...prev, [idx]: form.getValues(`addresses.${idx}.postalCode`) }));
     };
 
-    const handleCep = async () => {
-        const cep = form.getValues("postalCode");
+    const handleCep = async (idx: number) => {
+        const cep = form.getValues(`addresses.${idx}.postalCode`);
         const numericCep = cep.replace(/\D/g, "");
-        if (cep !== lastCep && cep !== cepOnFocus && numericCep.length === 8) {
-            setCepEdited(true);
-            setLastCep(cep);
+        if (cep !== lastCep[idx] && cep !== cepOnFocus[idx] && numericCep.length === 8) {
+            setCepEdited((prev) => ({ ...prev, [idx]: true }));
+            setLastCep((prev) => ({ ...prev, [idx]: cep }));
             const data = await getPostalCode(cep);
-            form.setValue("street", data.logradouro || "");
-            form.setValue("city", data.localidade || "");
-            form.setValue("state", data.uf || "");
-            form.setValue("country", data.estado || data.uf ? "Brasil" : "");
-            setAutoFilled({
-                street: !!data.logradouro && data.logradouro.trim() !== "",
-                city: !!data.localidade && data.localidade.trim() !== "",
-                state: !!data.uf && data.uf.trim() !== "",
-                country: !!(data.estado && data.estado.trim() !== "" || data.uf && data.uf.trim() !== "")
-            });
+            form.setValue(`addresses.${idx}.street`, data.logradouro || "");
+            form.setValue(`addresses.${idx}.city`, data.localidade || "");
+            form.setValue(`addresses.${idx}.state`, data.uf || "");
+            form.setValue(`addresses.${idx}.country`, data.estado || data.uf ? "Brasil" : "");
+            setAutoFilled((prev) => ({
+                ...prev,
+                [idx]: {
+                    street: !!data.logradouro && data.logradouro.trim() !== "",
+                    city: !!data.localidade && data.localidade.trim() !== "",
+                    state: !!data.uf && data.uf.trim() !== "",
+                    country: !!(data.estado && data.estado.trim() !== "" || data.uf && data.uf.trim() !== "")
+                }
+            }));
         }
     };
 
@@ -137,64 +124,71 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
     };
 
     // Se for criação, só permite editar campos após buscar um CEP válido
-    const isFieldDisabled = (field: string) => {
-        if (!isEdit && !cepEdited) return true;
-        if (isEdit && !cepEdited) return true;
-        return !!autoFilled[field];
+    const isFieldDisabled = (field: string, idx: number) => {
+        if (!isEdit && !cepEdited[idx]) return true;
+        if (isEdit && !cepEdited[idx]) return true;
+        return !!(autoFilled[idx]?.[field]);
     };
 
     return (
         <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Input
-                {...form.register("postalCode")}
-                placeholder="CEP"
-                maxLength={9}
-                onFocus={handleCepFocus}
-                onBlur={handleCep}
-                onChange={e => {
-                    const masked = maskCep(e.target.value);
-                    form.setValue("postalCode", masked);
-                    if (isEdit || !isEdit) setCepEdited(false);
-                }}
-                value={form.watch("postalCode")}
-            />
-            {((isEdit && !cepEdited) || (!isEdit && !cepEdited)) && (
-                <InfoMsg>Altere o CEP para liberar a edição dos outros campos.</InfoMsg>
-            )}
-            <Input
-                {...form.register("street")}
-                placeholder="Rua"
-                disabled={isFieldDisabled("street")}
-            />
-            <Input
-                {...form.register("city")}
-                placeholder="Cidade"
-                disabled={isFieldDisabled("city")}
-            />
-            <Input
-                {...form.register("state")}
-                placeholder="Estado"
-                disabled={isFieldDisabled("state")}
-            />
-            <Input
-                {...form.register("country")}
-                placeholder="País"
-                disabled={isFieldDisabled("country")}
-            />
-            <Select {...form.register("addressType")}
-                disabled={isFieldDisabled("addressType")}
-            >
-                <option value="RESIDENTIAL">Residencial</option>
-                <option value="COMMERCIAL">Comercial</option>
-            </Select>
-            {form.formState.errors && (
-                <ErrorMsg>
-                    {Object.values(form.formState.errors).map(e => e?.message).join(" | ")}
-                </ErrorMsg>
-            )}
-            <Button type="submit" disabled={(!isEdit && !cepEdited) || (isEdit && !cepEdited)}>
-                {isEdit ? "Atualizar" : "Salvar"}
-            </Button>
+            {fields.map((field, idx) => (
+                <div key={field.id} style={{ marginBottom: 24, borderBottom: idx < fields.length - 1 ? '1px solid #eee' : 'none', paddingBottom: 16 }}>
+                    <S.Input
+                        {...form.register(`addresses.${idx}.postalCode`)}
+                        placeholder="CEP"
+                        maxLength={9}
+                        onFocus={() => handleCepFocus(idx)}
+                        onBlur={() => handleCep(idx)}
+                        onChange={e => {
+                            const masked = maskCep(e.target.value);
+                            form.setValue(`addresses.${idx}.postalCode`, masked);
+                            setCepEdited((prev) => ({ ...prev, [idx]: false }));
+                            if (masked.replace(/\D/g, "").length === 8) {
+                                handleCep(idx);
+                            }
+                        }}
+                        value={form.watch(`addresses.${idx}.postalCode`)}
+                    />
+                    {((isEdit && !cepEdited[idx]) || (!isEdit && !cepEdited[idx])) && (
+                        <S.InfoMsg>Altere o CEP para liberar a edição dos outros campos.</S.InfoMsg>
+                    )}
+                    <S.Input
+                        {...form.register(`addresses.${idx}.street`)}
+                        placeholder="Rua"
+                        disabled={isFieldDisabled("street", idx)}
+                    />
+                    <S.Input
+                        {...form.register(`addresses.${idx}.city`)}
+                        placeholder="Cidade"
+                        disabled={isFieldDisabled("city", idx)}
+                    />
+                    <S.Input
+                        {...form.register(`addresses.${idx}.state`)}
+                        placeholder="Estado"
+                        disabled={isFieldDisabled("state", idx)}
+                    />
+                    <S.Input
+                        {...form.register(`addresses.${idx}.country`)}
+                        placeholder="País"
+                        disabled={isFieldDisabled("country", idx)}
+                    />
+                    <S.Select {...form.register(`addresses.${idx}.addressType`)}
+                        disabled={isFieldDisabled("addressType", idx)}
+                    >
+                        <option value="RESIDENTIAL">Residencial</option>
+                        <option value="COMMERCIAL">Comercial</option>
+                    </S.Select>
+                    {form.formState.errors?.addresses?.[idx] && (
+                        <S.ErrorMsg>
+                            {Object.values(form.formState.errors.addresses[idx] as any).flat().join(' | ')}
+                        </S.ErrorMsg>
+                    )}
+                </div>
+            ))}
+            <S.Button type="submit" disabled={!form.formState.isValid}>
+                Salvar
+            </S.Button>
         </form>
     );
 }

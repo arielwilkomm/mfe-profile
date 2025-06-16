@@ -10,6 +10,8 @@ const GlobalStyle = createGlobalStyle`
     color: #000; /* text-black */
     margin: 0;
     font-family: inherit;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 `;
 

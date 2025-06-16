@@ -6,94 +6,7 @@ import { useProfileApi } from "../../hooks/useProfileApi";
 import { ProfileForm } from "../../components/ProfileForm";
 import { ProfileFormValues } from "../../schemas/profileSchema";
 import React from "react";
-import styled from "styled-components";
-
-const Header = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-`;
-const Title = styled.h1`
-  flex: 1;
-  text-align: center;
-  font-size: 2rem;
-  font-weight: bold;
-`;
-const Button = styled.button<{ color?: string }>`
-  min-width: 140px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  background: ${({ color }) => color || '#2563eb'};
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-  &:hover {
-    background: ${({ color }) => color === '#2563eb' ? '#1d4ed8' : color === '#d97706' ? '#b45309' : color === '#dc2626' ? '#b91c1c' : color};
-  }
-`;
-const Table = styled.table`
-  min-width: 700px;
-  width: 100%;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-  border: 1px solid #e5e7eb;
-  font-size: 0.95rem;
-  overflow: hidden;
-`;
-const Thead = styled.thead`
-  background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%);
-`;
-const Th = styled.th`
-  border-bottom: 1px solid #e5e7eb;
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-`;
-const Td = styled.td`
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  vertical-align: middle;
-`;
-const ModalBg = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-const Modal = styled.div`
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
-  padding: 32px 24px 24px 24px;
-  width: 100%;
-  max-width: 400px;
-  position: relative;
-`;
-const CloseButton = styled.button`
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #6b7280;
-  cursor: pointer;
-`;
-const Link = styled.a`
-  color: #2563eb;
-  text-decoration: underline;
-  &:hover {
-    color: #1d4ed8;
-  }
-`;
+import * as S from "./styles";
 
 export default function ProfilePage() {
     const { getProfiles, deleteProfile } = useProfileApi();
@@ -154,84 +67,89 @@ export default function ProfilePage() {
     };
 
     return (
-        <Container>
-            <Header>
+        <S.containerTableProfile>
+            <S.HeaderProfile>
                 <div style={{ flex: 1 }} />
-                <Title>Perfis de Usuário</Title>
-                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button onClick={handleCreate}>Criar usuário</Button>
-                </div>
-            </Header>
-            {error && <div style={{ color: '#dc2626', marginBottom: 8 }}>{error}</div>}
-            <div style={{ width: '100%', overflowX: 'auto', marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
-                <Table>
-                    <Thead>
+                <S.TitleProfile>Perfis de Usuário</S.TitleProfile>
+                <S.FlexEnd />
+            </S.HeaderProfile>
+            <S.TopBarProfile>
+                <S.ErrorMsg>{error}</S.ErrorMsg>
+                <S.Button variant="primary" onClick={handleCreate}>Criar usuário</S.Button>
+            </S.TopBarProfile>
+            <S.TableWrapperProfile>
+                <S.TableProfile>
+                    <S.TheadProfile>
                         <tr>
-                            <Th>Nome</Th>
-                            <Th>CPF</Th>
-                            <Th>Email</Th>
-                            <Th>Telefone</Th>
-                            <Th>Endereços</Th>
-                            <Th>Ações</Th>
+                            <S.ThProfile>Nome</S.ThProfile>
+                            <S.ThProfile>CPF</S.ThProfile>
+                            <S.ThProfile>Email</S.ThProfile>
+                            <S.ThProfile>Telefone</S.ThProfile>
+                            <S.ThProfile>Endereços</S.ThProfile>
+                            <S.ThProfile>Ações</S.ThProfile>
                         </tr>
-                    </Thead>
+                    </S.TheadProfile>
                     <tbody>
                         {profiles.length === 0 ? (
                             <tr>
-                                <Td colSpan={6} style={{ textAlign: 'center', color: '#6b7280' }}>
+                                <S.TdProfileEmpty colSpan={6}>
                                     Nenhum perfil encontrado
-                                </Td>
+                                </S.TdProfileEmpty>
                             </tr>
                         ) : (
                             profiles.map((profile, idx) => (
-                                <tr key={profile.cpf} style={{ background: idx % 2 === 0 ? '#f9fafb' : '#fff' }}>
-                                    <Td>{profile.name}</Td>
-                                    <Td>{profile.cpf}</Td>
-                                    <Td>{profile.email}</Td>
-                                    <Td>{profile.phone}</Td>
-                                    <Td>
-                                        <Link href={`/address?cpf=${profile.cpf}`}>Ir para endereços</Link>
-                                    </Td>
-                                    <Td style={{ whiteSpace: 'nowrap' }}>
-                                        <Button color="#d97706" style={{ marginRight: 8, background: 'none', color: '#d97706', textDecoration: 'underline', boxShadow: 'none', padding: 0 }} onClick={() => handleEdit(profile)}>
+                                <S.TableRowProfile key={profile.cpf} even={idx % 2 === 0}>
+                                    <S.TdProfile>{profile.name}</S.TdProfile>
+                                    <S.TdProfile>{profile.cpf}</S.TdProfile>
+                                    <S.TdProfile>{profile.email}</S.TdProfile>
+                                    <S.TdProfile>{profile.phone}</S.TdProfile>
+                                    <S.TdProfile>
+                                        <S.LinkProfile href={`/address?cpf=${profile.cpf}`}>Ir para endereços</S.LinkProfile>
+                                    </S.TdProfile>
+                                    <S.ActionTdProfile>
+                                        <S.Button variant="warning" onClick={() => handleEdit(profile)}>
                                             Alterar
-                                        </Button>
-                                        <Button color="#dc2626" style={{ background: 'none', color: '#dc2626', textDecoration: 'underline', boxShadow: 'none', padding: 0 }} onClick={() => handleDelete(profile.cpf)}>
+                                        </S.Button>
+                                        <S.Button variant="danger" onClick={() => handleDelete(profile.cpf)}>
                                             Excluir
-                                        </Button>
-                                    </Td>
-                                </tr>
+                                        </S.Button>
+                                    </S.ActionTdProfile>
+                                </S.TableRowProfile>
                             ))
                         )}
                     </tbody>
-                </Table>
-            </div>
+                </S.TableProfile>
+            </S.TableWrapperProfile>
             {/* Modal */}
             {showModal && (
-                <ModalBg>
-                    <Modal style={{ maxWidth: 480 }}>
-                        <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
-                        <h2 style={{ fontWeight: 600, marginBottom: 8 }}>{selectedProfile ? "Editar perfil" : "Criar novo perfil"}</h2>
+                <S.ModalBgProfile>
+                    <S.ModalProfile>
+                        <S.CloseButtonProfile onClick={() => setShowModal(false)}>×</S.CloseButtonProfile>
+                        <S.ModalTitle>{selectedProfile ? "Editar perfil" : "Criar novo perfil"}</S.ModalTitle>
                         <ProfileForm
                             onSuccess={handleFormSuccess}
-                            initialValues={selectedProfile || undefined}
+                            initialValues={
+                                selectedProfile
+                                    ? { ...selectedProfile, addresses: selectedProfile.addresses ?? [] }
+                                    : undefined
+                            }
                             isEdit={!!selectedProfile}
                         />
-                    </Modal>
-                </ModalBg>
+                    </S.ModalProfile>
+                </S.ModalBgProfile>
             )}
             {/* Modal de confirmação de exclusão */}
             {showDeleteModal && (
-                <ModalBg>
-                    <Modal style={{ maxWidth: 400 }}>
-                        <h2 style={{ fontWeight: 600, marginBottom: 16 }}>Deseja realmente excluir este usuário?</h2>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                            <Button color="#6b7280" style={{ background: '#e5e7eb', color: '#111827' }} onClick={cancelDelete}>Cancelar</Button>
-                            <Button color="#dc2626" onClick={confirmDelete}>OK</Button>
-                        </div>
-                    </Modal>
-                </ModalBg>
+                <S.ModalBgProfile>
+                    <S.ModalProfile>
+                        <S.ModalTitleDelete>Deseja realmente excluir este usuário?</S.ModalTitleDelete>
+                        <S.ModalActions>
+                            <S.Button variant="neutral" onClick={cancelDelete}>Cancelar</S.Button>
+                            <S.Button variant="danger" onClick={confirmDelete}>OK</S.Button>
+                        </S.ModalActions>
+                    </S.ModalProfile>
+                </S.ModalBgProfile>
             )}
-        </Container>
+        </S.containerTableProfile>
     );
 }
