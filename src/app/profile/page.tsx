@@ -1,70 +1,26 @@
 "use client";
 
 import { Container } from "@/components/Container";
-import { useEffect, useState } from "react";
-import { useProfileApi } from "../../hooks/useProfileApi";
-import { ProfileForm } from "../../components/ProfileForm";
-import { ProfileFormValues } from "../../schemas/profileSchema";
 import React from "react";
+import { ProfileForm } from "../../components/ProfileForm";
 import * as S from "./styles";
+import { useProfilePage } from "./useProfilePage";
 
 export default function ProfilePage() {
-    const { getProfiles, deleteProfile } = useProfileApi();
-    const [profiles, setProfiles] = useState<ProfileFormValues[]>([]);
-    const [error, setError] = useState("");
-    const [selectedProfile, setSelectedProfile] = useState<ProfileFormValues | null>(null);
-    const [showModal, setShowModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [cpfToDelete, setCpfToDelete] = useState<string | null>(null);
-
-    useEffect(() => {
-        fetchProfiles();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const fetchProfiles = async () => {
-        try {
-            const data = await getProfiles();
-            setProfiles(Array.isArray(data) ? data : []);
-        } catch {
-            setError("Erro ao buscar perfis");
-        }
-    };
-
-    const handleEdit = (profile: ProfileFormValues) => {
-        setSelectedProfile(profile);
-        setShowModal(true);
-    };
-
-    const handleCreate = () => {
-        setSelectedProfile(null);
-        setShowModal(true);
-    };
-
-    const handleDelete = async (cpf: string) => {
-        setCpfToDelete(cpf);
-        setShowDeleteModal(true);
-    };
-
-    const confirmDelete = async () => {
-        if (cpfToDelete) {
-            await deleteProfile(cpfToDelete);
-            setCpfToDelete(null);
-            setShowDeleteModal(false);
-            fetchProfiles();
-        }
-    };
-
-    const cancelDelete = () => {
-        setCpfToDelete(null);
-        setShowDeleteModal(false);
-    };
-
-    const handleFormSuccess = () => {
-        setSelectedProfile(null);
-        setShowModal(false);
-        fetchProfiles();
-    };
+    const {
+        profiles,
+        error,
+        selectedProfile,
+        showModal,
+        showDeleteModal,
+        setShowModal,
+        handleEdit,
+        handleCreate,
+        handleDelete,
+        confirmDelete,
+        cancelDelete,
+        handleFormSuccess,
+    } = useProfilePage();
 
     return (
         <S.containerTableProfile>

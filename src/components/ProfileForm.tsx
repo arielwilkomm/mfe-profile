@@ -96,12 +96,25 @@ export function ProfileForm({ onSuccess, initialValues, isEdit }: {
 
     // Adaptar o submit para enviar todos os endereços
     const onSubmit = async (data: ProfileFormFull) => {
-        // Sincroniza o array addresses do form antes de submeter
-        const payload = { ...data, addresses: enderecosAdicionados };
-        // Atualiza o form para garantir que addresses está correto
-        form.setValue('addresses', enderecosAdicionados, { shouldValidate: true });
+        // Garante que addresses será enviado corretamente
+        const addresses = enderecosAdicionados.length > 0 ? enderecosAdicionados : [novoEndereco];
+        const payload = {
+            cpf: data.cpf,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            addresses: addresses.map(addr => ({
+                addressType: addr.addressType,
+                street: addr.street,
+                city: addr.city,
+                state: addr.state,
+                country: addr.country,
+                postalCode: addr.postalCode
+            }))
+        };
+        form.setValue('addresses', addresses, { shouldValidate: true });
         const valid = await form.trigger();
-        if (!valid || enderecosAdicionados.length === 0) return;
+        if (!valid || addresses.length === 0) return;
         if (isEdit && initialValues) {
             await updateProfile(payload.cpf, payload);
         } else {
@@ -113,109 +126,113 @@ export function ProfileForm({ onSuccess, initialValues, isEdit }: {
     };
 
     return (
-        <form onSubmit={form.handleSubmit(onSubmit)} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.06)', padding: 32, maxWidth: 900, margin: '0 auto' }}>
-            <S.ProfileFormGrid>
-                <S.ProfileFormCol>
-                    <S.Input {...form.register("cpf")} placeholder="CPF" disabled={isEdit} />
-                </S.ProfileFormCol>
-                <S.ProfileFormCol>
-                    <S.Input {...form.register("name")} placeholder="Nome" />
-                </S.ProfileFormCol>
-                <S.ProfileFormCol>
-                    <S.Input {...form.register("phone")} placeholder="Telefone" />
-                </S.ProfileFormCol>
-                <S.ProfileFormCol>
-                    <S.Input {...form.register("email")} placeholder="Email" />
-                </S.ProfileFormCol>
-            </S.ProfileFormGrid>
-            {/* Tabela de endereços adicionados */}
-            {enderecosAdicionados.length > 0 && (
-                <table style={{ width: '100%', marginBottom: 24, background: '#f9fafb', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-                    <thead style={{ background: 'linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%)' }}>
-                        <tr>
-                            <th style={{ padding: 12, textAlign: 'left' }}>CEP</th>
-                            <th style={{ padding: 12, textAlign: 'left' }}>Rua</th>
-                            <th style={{ padding: 12, textAlign: 'left' }}>Cidade</th>
-                            <th style={{ padding: 12, textAlign: 'left' }}>Estado</th>
-                            <th style={{ padding: 12, textAlign: 'left' }}>País</th>
-                            <th style={{ padding: 12, textAlign: 'left' }}>Tipo</th>
-                            <th style={{ padding: 12, textAlign: 'left' }}>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {enderecosAdicionados.map((end, idx) => (
-                            <tr key={idx} style={{ background: idx % 2 === 0 ? '#fff' : '#f3f4f6' }}>
-                                <td style={{ padding: 12 }}>{end.postalCode}</td>
-                                <td style={{ padding: 12 }}>{end.street}</td>
-                                <td style={{ padding: 12 }}>{end.city}</td>
-                                <td style={{ padding: 12 }}>{end.state}</td>
-                                <td style={{ padding: 12 }}>{end.country}</td>
-                                <td style={{ padding: 12 }}>{end.addressType}</td>
-                                <td style={{ padding: 12 }}>
-                                    <button type="button" onClick={() => handleRemoveEndereco(idx)} style={{ color: '#dc2626', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 500 }}>Remover</button>
-                                </td>
+        <S.FormContainer>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <S.ProfileFormGrid>
+                    <S.ProfileFormCol>
+                        <S.Input {...form.register("cpf")} placeholder="CPF" disabled={isEdit} />
+                    </S.ProfileFormCol>
+                    <S.ProfileFormCol>
+                        <S.Input {...form.register("name")} placeholder="Nome" />
+                    </S.ProfileFormCol>
+                    <S.ProfileFormCol>
+                        <S.Input {...form.register("phone")} placeholder="Telefone" />
+                    </S.ProfileFormCol>
+                    <S.ProfileFormCol>
+                        <S.Input {...form.register("email")} placeholder="Email" />
+                    </S.ProfileFormCol>
+                </S.ProfileFormGrid>
+                {/* Tabela de endereços adicionados */}
+                {enderecosAdicionados.length > 0 && (
+                    <S.TableProfile>
+                        <S.TheadProfile>
+                            <tr>
+                                <S.ThProfile>CEP</S.ThProfile>
+                                <S.ThProfile>Rua</S.ThProfile>
+                                <S.ThProfile>Cidade</S.ThProfile>
+                                <S.ThProfile>Estado</S.ThProfile>
+                                <S.ThProfile>País</S.ThProfile>
+                                <S.ThProfile>Tipo</S.ThProfile>
+                                <S.ThProfile>Ações</S.ThProfile>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-            {/* Formulário de endereço para adicionar */}
-            <div style={{ marginBottom: 24, borderBottom: '1px solid #eee', paddingBottom: 16, background: '#f9fafb', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: 16 }}>
-                <S.Input
-                    placeholder="CEP"
-                    maxLength={9}
-                    value={novoEndereco.postalCode}
-                    onChange={e => {
-                        const masked = maskCep(e.target.value);
-                        setNovoEndereco({ ...novoEndereco, postalCode: masked });
-                    }}
-                    onBlur={() => handleCep(novoEndereco.postalCode)}
-                    ref={el => {
-                        if (el && focusCep) {
-                            el.focus();
-                            setFocusCep(false);
-                        }
-                    }}
-                />
-                <S.Input
-                    placeholder="Rua"
-                    value={novoEndereco.street}
-                    onChange={e => setNovoEndereco({ ...novoEndereco, street: e.target.value })}
-                />
-                <S.Input
-                    placeholder="Cidade"
-                    value={novoEndereco.city}
-                    onChange={e => setNovoEndereco({ ...novoEndereco, city: e.target.value })}
-                />
-                <S.Input
-                    placeholder="Estado"
-                    value={novoEndereco.state}
-                    onChange={e => setNovoEndereco({ ...novoEndereco, state: e.target.value })}
-                />
-                <S.Input
-                    placeholder="País"
-                    value={novoEndereco.country}
-                    onChange={e => setNovoEndereco({ ...novoEndereco, country: e.target.value })}
-                />
-                <AddressFormStyles.Select
-                    value={novoEndereco.addressType}
-                    onChange={e => setNovoEndereco({ ...novoEndereco, addressType: e.target.value as 'RESIDENTIAL' | 'COMMERCIAL' })}
-                >
-                    <option value="RESIDENTIAL">Residencial</option>
-                    <option value="COMMERCIAL">Comercial</option>
-                </AddressFormStyles.Select>
-                <button type="button" onClick={handleAddEndereco} style={{ marginTop: 8, marginBottom: 8, background: '#16a34a', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: 6, fontWeight: 500, fontSize: '1rem', cursor: 'pointer' }}>
-                    + Adicionar endereço
-                </button>
-                {erroEndereco && (
-                    <S.ErrorMsg>{erroEndereco}</S.ErrorMsg>
+                        </S.TheadProfile>
+                        <tbody>
+                            {enderecosAdicionados.map((end, idx) => (
+                                <S.TableRowProfile key={idx} even={idx % 2 === 0}>
+                                    <S.TdProfile>{end.postalCode}</S.TdProfile>
+                                    <S.TdProfile>{end.street}</S.TdProfile>
+                                    <S.TdProfile>{end.city}</S.TdProfile>
+                                    <S.TdProfile>{end.state}</S.TdProfile>
+                                    <S.TdProfile>{end.country}</S.TdProfile>
+                                    <S.TdProfile>{end.addressType}</S.TdProfile>
+                                    <S.ActionTdProfile>
+                                        <S.Button type="button" variant="danger" onClick={() => handleRemoveEndereco(idx)}>
+                                            Remover
+                                        </S.Button>
+                                    </S.ActionTdProfile>
+                                </S.TableRowProfile>
+                            ))}
+                        </tbody>
+                    </S.TableProfile>
                 )}
-            </div>
-            <div style={{ display: 'flex', gap: 16 }}>
-                <S.Button type="submit" variant="primary" disabled={enderecosAdicionados.length === 0 || !form.formState.isValid}>
-                    {isEdit ? "Atualizar" : "Salvar"}
-                </S.Button>
-            </div>
-        </form>
+                {/* Formulário de endereço para adicionar */}
+                <S.AddressFormWrapper>
+                    <S.Input
+                        placeholder="CEP"
+                        maxLength={9}
+                        value={novoEndereco.postalCode}
+                        onChange={e => {
+                            const masked = maskCep(e.target.value);
+                            setNovoEndereco({ ...novoEndereco, postalCode: masked });
+                        }}
+                        onBlur={() => handleCep(novoEndereco.postalCode)}
+                        ref={el => {
+                            if (el && focusCep) {
+                                el.focus();
+                                setFocusCep(false);
+                            }
+                        }}
+                    />
+                    <S.Input
+                        placeholder="Rua"
+                        value={novoEndereco.street}
+                        onChange={e => setNovoEndereco({ ...novoEndereco, street: e.target.value })}
+                    />
+                    <S.Input
+                        placeholder="Cidade"
+                        value={novoEndereco.city}
+                        onChange={e => setNovoEndereco({ ...novoEndereco, city: e.target.value })}
+                    />
+                    <S.Input
+                        placeholder="Estado"
+                        value={novoEndereco.state}
+                        onChange={e => setNovoEndereco({ ...novoEndereco, state: e.target.value })}
+                    />
+                    <S.Input
+                        placeholder="País"
+                        value={novoEndereco.country}
+                        onChange={e => setNovoEndereco({ ...novoEndereco, country: e.target.value })}
+                    />
+                    <S.Select
+                        value={novoEndereco.addressType}
+                        onChange={e => setNovoEndereco({ ...novoEndereco, addressType: e.target.value as 'RESIDENTIAL' | 'COMMERCIAL' })}
+                    >
+                        <option value="RESIDENTIAL">Residencial</option>
+                        <option value="COMMERCIAL">Comercial</option>
+                    </S.Select>
+                    <S.Button type="button" variant="primary" onClick={handleAddEndereco}>
+                        + Adicionar endereço
+                    </S.Button>
+                    {erroEndereco && (
+                        <S.ErrorMsg>{erroEndereco}</S.ErrorMsg>
+                    )}
+                </S.AddressFormWrapper>
+                <S.FormActions>
+                    <S.Button type="submit" variant="primary" disabled={enderecosAdicionados.length === 0 || !form.formState.isValid}>
+                        {isEdit ? "Atualizar" : "Salvar"}
+                    </S.Button>
+                </S.FormActions>
+            </form>
+        </S.FormContainer>
     );
 }

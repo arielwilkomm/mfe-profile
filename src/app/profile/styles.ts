@@ -269,3 +269,39 @@ export const ProfileFormRow = styled.div`
 export const ProfileFormCol = styled.div`
   flex: 1;
 `;
+
+export const FormContainer = styled.div`
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  padding: 32px 24px 24px 24px;
+`;
+
+export const AddressFormWrapper = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const Select = styled.select`
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 1rem;
+`;
+
+export const FormActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+`;
