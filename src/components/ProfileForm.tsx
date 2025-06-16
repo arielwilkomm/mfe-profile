@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, ProfileFormValues } from "../schemas/profileSchema";
 import { addressSchema, AddressFormValues } from "../schemas/addressSchema";
 import { useProfileApi } from "../hooks/useProfileApi";
+import { useProfileForm } from "../hooks/useProfileForm";
 import * as S from "../app/profile/styles";
 import * as AddressFormStyles from "../components/AddressForm/styles";
 
@@ -16,114 +17,20 @@ export function ProfileForm({ onSuccess, initialValues, isEdit }: {
     initialValues?: ProfileFormFull;
     isEdit?: boolean;
 }) {
-    const { createProfile, updateProfile } = useProfileApi();
-    const form = useForm<ProfileFormFull>({
-        resolver: zodResolver(
-            profileSchema.extend({ addresses: addressSchema.array().min(1, 'Adicione pelo menos um endereço') })
-        ),
-        defaultValues: initialValues || {
-            name: "",
-            cpf: "",
-            email: "",
-            phone: "",
-            addresses: [],
-        },
-        mode: 'onChange',
-    });
-
-    // Estado para endereços adicionados
-    const [enderecosAdicionados, setEnderecosAdicionados] = useState<AddressFormValues[]>(initialValues?.addresses ?? []);
-    const [novoEndereco, setNovoEndereco] = useState<AddressFormValues>({
-        street: '',
-        city: '',
-        state: '',
-        country: '',
-        postalCode: '',
-        addressType: 'RESIDENTIAL',
-    });
-    const [erroEndereco, setErroEndereco] = useState<string | null>(null);
-    const [focusCep, setFocusCep] = useState(false);
-
-    // Função para adicionar endereço à lista
-    const handleAddEndereco = () => {
-        const valid = addressSchema.safeParse(novoEndereco);
-        if (!valid.success) {
-            setErroEndereco("Preencha todos os campos obrigatórios do endereço.");
-            return;
-        }
-        setEnderecosAdicionados([...enderecosAdicionados, novoEndereco]);
-        setNovoEndereco({
-            street: '',
-            city: '',
-            state: '',
-            country: '',
-            postalCode: '',
-            addressType: 'RESIDENTIAL',
-        });
-        setErroEndereco(null);
-        setFocusCep(true);
-    };
-
-    // Função para remover endereço da lista
-    const handleRemoveEndereco = (idx: number) => {
-        setEnderecosAdicionados(enderecosAdicionados.filter((_, i) => i !== idx));
-    };
-
-    // Preenchimento automático de CEP para novo endereço
-    const handleCep = async (cep: string) => {
-        const numericCep = cep.replace(/\D/g, "");
-        if (numericCep.length === 8) {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/postal-code/${numericCep}`);
-            if (res.ok) {
-                const data = await res.json();
-                setNovoEndereco(prev => ({
-                    ...prev,
-                    street: data.logradouro || '',
-                    city: data.localidade || '',
-                    state: data.uf || '',
-                    country: data.estado || data.uf ? "Brasil" : '',
-                }));
-            }
-        }
-    };
-
-    const maskCep = (value: string) => {
-        return value
-            .replace(/\D/g, "")
-            .replace(/(\d{5})(\d)/, "$1-$2")
-            .replace(/(-\d{3})\d+?$/, "$1");
-    };
-
-    // Adaptar o submit para enviar todos os endereços
-    const onSubmit = async (data: ProfileFormFull) => {
-        // Garante que addresses será enviado corretamente
-        const addresses = enderecosAdicionados.length > 0 ? enderecosAdicionados : [novoEndereco];
-        const payload = {
-            cpf: data.cpf,
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            addresses: addresses.map(addr => ({
-                addressType: addr.addressType,
-                street: addr.street,
-                city: addr.city,
-                state: addr.state,
-                country: addr.country,
-                postalCode: addr.postalCode
-            }))
-        };
-        form.setValue('addresses', addresses, { shouldValidate: true });
-        const valid = await form.trigger();
-        if (!valid || addresses.length === 0) return;
-        if (isEdit && initialValues) {
-            await updateProfile(payload.cpf, payload);
-        } else {
-            await createProfile(payload);
-        }
-        form.reset();
-        setEnderecosAdicionados([]);
-        onSuccess?.();
-    };
+    const {
+        form,
+        enderecosAdicionados,
+        setNovoEndereco,
+        novoEndereco,
+        erroEndereco,
+        focusCep,
+        setFocusCep,
+        handleAddEndereco,
+        handleRemoveEndereco,
+        handleCep,
+        maskCep,
+        onSubmit,
+    } = useProfileForm({ initialValues, isEdit, onSuccess });
 
     return (
         <S.FormContainer>
