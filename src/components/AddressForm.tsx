@@ -1,10 +1,7 @@
 import React from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { addressSchema, AddressFormValues } from "../schemas/addressSchema";
-import { useAddressApi } from "../hooks/useAddressApi";
 import { useAddressForm } from "../hooks/useAddressForm";
 import * as S from "./AddressForm/styles";
+import { AddressFormValues } from "@/schemas/addressSchema";
 
 interface AddressFormProps {
     cpf: string;
@@ -17,16 +14,11 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
     const {
         form,
         fields,
-        append,
         onSubmit,
-        autoFilled,
-        cepEdited,
-        lastCep,
-        cepOnFocus,
-        handleCepFocus,
         handleCep,
         maskCep,
         isFieldDisabled,
+        cepEdited,
     } = useAddressForm({ cpf, onSuccess, initialValues, isEdit });
 
     return (
@@ -37,7 +29,6 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
                         {...form.register(`addresses.${idx}.postalCode`)}
                         placeholder="CEP"
                         maxLength={9}
-                        onFocus={() => handleCepFocus(idx)}
                         onBlur={() => handleCep(idx)}
                         onChange={e => {
                             const masked = maskCep(e.target.value);
@@ -79,7 +70,7 @@ export function AddressForm({ cpf, onSuccess, initialValues, isEdit }: AddressFo
                     </S.Select>
                     {form.formState.errors?.addresses?.[idx] && (
                         <S.ErrorMsg>
-                            {Object.values(form.formState.errors.addresses[idx] as any).flat().join(' | ')}
+                            {Object.values(form.formState.errors.addresses[idx] as Record<string, string[]>).flat().join(' | ')}
                         </S.ErrorMsg>
                     )}
                 </div>

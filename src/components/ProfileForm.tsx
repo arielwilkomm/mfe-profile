@@ -1,12 +1,8 @@
 import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { profileSchema, ProfileFormValues } from "../schemas/profileSchema";
-import { addressSchema, AddressFormValues } from "../schemas/addressSchema";
-import { useProfileApi } from "../hooks/useProfileApi";
+import { ProfileFormValues } from "../schemas/profileSchema";
+import { AddressFormValues } from "../schemas/addressSchema";
 import { useProfileForm } from "../hooks/useProfileForm";
 import * as S from "../app/profile/styles";
-import * as AddressFormStyles from "../components/AddressForm/styles";
 
 interface ProfileFormFull extends ProfileFormValues {
     addresses: AddressFormValues[];

@@ -1,6 +1,5 @@
 "use client";
 
-import { Container } from "@/components/Container";
 import React from "react";
 import { ProfileForm } from "../../components/ProfileForm";
 import * as S from "./styles";
